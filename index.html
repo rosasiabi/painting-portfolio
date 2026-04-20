@@ -15,11 +15,11 @@
 
 <style>
   :root{
-    --paper: #ece7de;     /* warm off-white, like linen canvas */
+    --paper: #dedfda;     /* warm off-white, like linen canvas */
     --ink:   #0a0a0a;     /* near black */
     --ink-2: #2a2620;     /* warm black */
     --accent:#e77bd5;     /* siabi pink */
-    --accent-deep:#c758b0;
+    --accent-deep:#e769d6;
     --muted: #8a847a;
     --rule:  #0a0a0a;
   }
@@ -48,7 +48,7 @@
   /* Vignette for edge drama */
   .vignette{
     position:fixed; inset:0; pointer-events:none; z-index:4;
-    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.18) 100%);
+    background: radial-gradient(ellipse at center, transparent 30%, #dedfda 100%);
   }
 
   /* ---------- LOADING SCREEN ---------- */
@@ -249,7 +249,7 @@
   <div class="bottom">
     <span id="loading-pct">000%</span>
     <div id="loading-bar-track"><div id="loading-bar"></div></div>
-    <span>MMXXVI</span>
+    <span>LOADING</span>
   </div>
 </div>
 
@@ -287,7 +287,6 @@
     <button data-filter="status" data-value="all" class="active">All</button>
     <button data-filter="status" data-value="available">Available</button>
     <button data-filter="status" data-value="sold">Sold</button>
-    <button data-filter="status" data-value="in progress">In Progress</button>
   </div>
 </aside>
 
