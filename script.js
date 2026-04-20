@@ -18,17 +18,16 @@ const paintingsData = [
 
   { fileName: "bb09.webp", title: "head", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb01.webp", title: "leg", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "bb07.webp", title: "nipple", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
+  { fileName: "bb07.webp", title: "nipple", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "landscape" },
   { fileName: "bb03.webp", title: "half", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb04.webp", title: "fist", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb05.webp", title: "v", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
   { fileName: "bb02.webp", title: "thigh", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
   { fileName: "bb06.webp", title: "chest", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "bb08.webp", title: "armpit", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "bb10.webp", title: "upper body", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
+  { fileName: "bb08.webp", title: "armpit", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
+  { fileName: "bb10.webp", title: "upper body", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
   { fileName: "CAKE.webp", title: "Aging backwards", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
-  { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
-  { fileName: "CHARLES.webp", title: "i have meddled... if that is the word", size: "A2", medium: "paper", category: "misc", status: "in progress", orientation: "portrait" }
+  { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" }
 ];
 
 // Sculptures — loaded lazily when camera is near.
@@ -46,7 +45,9 @@ function getDimensions(sizeStr, medium, orientation) {
   else if (s.includes("a2")) { w = 4.2; h = 5.94; }
   else if (s.includes("40cmx50cm")) { w = 4.0; h = 5.0; }
   if (orientation === "landscape") { [w, h] = [h, w]; }
-  thickness = (medium === "paper") ? 0.02 : 0.18;
+  
+  // Bump the canvas thickness from 0.18 to 0.35 so it's visible in orthographic
+  thickness = (medium === "paper") ? 0.02 : 0.35; 
   return { w, h, thickness };
 }
 
@@ -61,7 +62,8 @@ scene.background = new THREE.Color(PAPER);
 scene.fog = new THREE.Fog(PAPER, 120, 260);
 
 const aspect = window.innerWidth / window.innerHeight;
-const d = 20;
+// If the screen is portrait (aspect < 1), we increase 'd' to maintain the same horizontal framing.
+let d = aspect < 1 ? 7 / aspect : 7; 
 const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
 camera.position.set(12, 28, 18);
 camera.lookAt(0, 0, 0);
@@ -110,14 +112,6 @@ floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// Subtle dark horizon ring — very editorial.
-const ring = new THREE.Mesh(
-  new THREE.RingGeometry(55, 56, 128),
-  new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
-);
-ring.rotation.x = -Math.PI / 2;
-ring.position.y = 0.001;
-scene.add(ring);
 
 // ---- 4. LOADING MANAGER ----------------------------------------------------
 // PERF: we only gate the loading screen on the SCENE BOOT, not every texture.
@@ -161,7 +155,8 @@ function findSpot(radius) {
 }
 
 // ---- 6. PAINTINGS (geometry immediately, textures lazily) ------------------
-const sharedEdgeMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f1e8, roughness: 0.85 });
+// The edges remain Standard so they catch light and show physical depth
+const sharedEdgeMaterial = new THREE.MeshStandardMaterial({ color: 0xd2c7b5, roughness: 0.9 });
 const paintingMeshes = [];
 const interactableObjects = [];
 
@@ -172,9 +167,18 @@ paintingsData.forEach((data, idx) => {
 
   const geometry = new THREE.BoxGeometry(dims.w, dims.thickness, dims.h);
 
-  // Each painting gets its OWN face material (so we can swap the map in lazily).
+  // The front face goes back to Basic so the artwork's colors are purely neutral
   const faceMat = new THREE.MeshBasicMaterial({ map: placeholderTex });
-  const mats = [sharedEdgeMaterial, sharedEdgeMaterial, faceMat, sharedEdgeMaterial, sharedEdgeMaterial, sharedEdgeMaterial];
+  
+  // We mix the materials: Basic for the top (the art), Standard for the sides (the canvas edge)
+  const mats = [
+    sharedEdgeMaterial, // right
+    sharedEdgeMaterial, // left
+    faceMat,            // top (the front face in our floor-scatter layout)
+    sharedEdgeMaterial, // bottom
+    sharedEdgeMaterial, // back
+    sharedEdgeMaterial  // front
+  ];
 
   const mesh = new THREE.Mesh(geometry, mats);
   mesh.castShadow = true;
@@ -188,6 +192,7 @@ paintingsData.forEach((data, idx) => {
   data.loaded = false;
   mesh.userData = data;
 
+  mesh.visible = false; 
   scene.add(mesh);
   paintingMeshes.push(mesh);
   interactableObjects.push(mesh);
@@ -199,30 +204,22 @@ sculpturesData.forEach((sdata, i) => {
   const radius = 1.6;
   const { x, z } = findSpot(radius);
 
-  // Black plinth — pure editorial gesture.
-  const plinthH = 0.6;
-  const plinth = new THREE.Mesh(
-    new THREE.BoxGeometry(1.6, plinthH, 1.6),
-    new THREE.MeshStandardMaterial({ color: INK, roughness: 0.4, metalness: 0.1 })
-  );
-  plinth.position.set(x, plinthH / 2, z);
-  plinth.castShadow = true;
-  plinth.receiveShadow = true;
-  plinth.userData = { ...sdata, imagePath: null, index: paintingsData.length + i + 1, isSculpture: true };
-  scene.add(plinth);
-  paintingMeshes.push(plinth);
-  interactableObjects.push(plinth);
-
-  sculptureEntries.push({ data: sdata, plinth, x, z, plinthH, loaded: false, loading: false, mesh: null });
+  // We deleted the plinth. Just store the location data so the lazy loader
+  // knows where to place the 3D model when it comes into view.
+  sculptureEntries.push({ 
+    data: sdata, 
+    x, 
+    z, 
+    loaded: false, 
+    loading: false, 
+    mesh: null 
+  });
 });
 
 // ---- 8. LAZY TEXTURE + MODEL LOADER ---------------------------------------
-// Only loads what the camera can actually see (within a generous radius).
-// This is the single biggest perf win: first paint happens almost instantly.
 const LOAD_RADIUS_SQ = 60 * 60; // world units squared
 
 function cameraTargetXZ() {
-  // Approximate where the camera is looking at on the ground plane.
   return { x: camera.position.x - 5, z: camera.position.z - 7 };
 }
 
@@ -234,16 +231,27 @@ function maybeLoadTextures() {
     const dx = mesh.position.x - cx, dz = mesh.position.z - cz;
     if (dx * dx + dz * dz < LOAD_RADIUS_SQ) {
       d.loading = true;
-      textureLoader.load(d.imagePath, (tex) => {
-        tex.encoding = THREE.sRGBEncoding;
-        tex.anisotropy = 4;
-        d.faceMat.map = tex;
-        d.faceMat.needsUpdate = true;
-        d.loaded = true;
-      }, undefined, () => { d.loading = false; /* retry on next tick */ });
+      textureLoader.load(
+        d.imagePath, 
+        (tex) => { // SUCCESS
+          tex.encoding = THREE.sRGBEncoding;
+          tex.anisotropy = 4;
+          d.faceMat.map = tex;
+          d.faceMat.needsUpdate = true;
+          d.loaded = true;
+          applyFilters(); 
+        }, 
+        undefined, 
+        (err) => { // ERROR
+          console.error(`🚨 Failed to load texture: ${d.imagePath}`);
+          d.loading = false;
+          d.loaded = true; // Force it to be considered "loaded" so it unhides the placeholder
+          applyFilters();
+        }
+      );
     }
   }
-  // Sculptures too
+  
   for (const s of sculptureEntries) {
     if (s.loaded || s.loading) continue;
     const dx = s.x - cx, dz = s.z - cz;
@@ -260,7 +268,6 @@ function loadSculpture(s) {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    // Center & scale neatly atop the plinth.
     const box = new THREE.Box3().setFromObject(mesh);
     const size = new THREE.Vector3(); box.getSize(size);
     const center = new THREE.Vector3(); box.getCenter(center);
@@ -268,14 +275,14 @@ function loadSculpture(s) {
     const targetSize = 1.1;
     const k = targetSize / maxDim;
     mesh.scale.multiplyScalar(k);
+    // Rest directly on the floor (Y = 0) instead of the plinth
     mesh.position.set(
       s.x - center.x * k,
-      s.plinthH + (size.y * k) / 2 - (box.min.y * k) - (center.y * k) + 0.02,
+      (size.y * k) / 2 - (box.min.y * k) - (center.y * k) + 0.02,
       s.z - center.z * k
     );
     mesh.rotation.y = (Math.random() - 0.5) * Math.PI;
 
-    // Make it interactive too — click on the sculpture opens the info card.
     mesh.userData = { ...data, imagePath: null, index: 900, isSculpture: true };
     mesh.traverse(o => { if (o.isMesh) o.userData = mesh.userData; });
 
@@ -283,30 +290,51 @@ function loadSculpture(s) {
     interactableObjects.push(mesh);
     s.mesh = mesh;
     s.loaded = true;
+    applyFilters(); 
   };
 
   if (data.type === 'glb') {
     const loader = new GLTFLoader();
-    loader.load(data.file, (gltf) => {
-      const m = gltf.scene;
-      m.traverse(o => {
-        if (o.isMesh) {
-          o.castShadow = true; o.receiveShadow = true;
-          // Tint the GLB subtly to fit our palette
-          if (o.material && o.material.color) o.material.color = new THREE.Color(data.color);
-          if (o.material) { o.material.roughness = 0.6; o.material.metalness = 0.1; }
-        }
-      });
-      onMesh(m);
-    }, undefined, (err) => { console.warn('GLB failed', err); s.loading = false; });
+    loader.load(
+      data.file, 
+      (gltf) => {
+        const m = gltf.scene;
+        m.traverse(o => {
+          if (o.isMesh) {
+            o.castShadow = true; o.receiveShadow = true;
+            if (o.material && o.material.color) o.material.color = new THREE.Color(data.color);
+            if (o.material) { o.material.roughness = 0.6; o.material.metalness = 0.1; }
+          }
+        });
+        onMesh(m);
+      }, 
+      undefined, 
+      (err) => { 
+        console.error(`🚨 Failed to load GLB: ${data.file}`, err); 
+        s.loading = false; 
+        // Force plinth to show even if model fails
+        s.loaded = true; 
+        applyFilters();
+      }
+    );
   } else {
     const loader = new STLLoader();
-    loader.load(data.file, (geom) => {
-      geom.computeVertexNormals();
-      const mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.55, metalness: 0.05 });
-      const mesh = new THREE.Mesh(geom, mat);
-      onMesh(mesh);
-    }, undefined, (err) => { console.warn('STL failed', err); s.loading = false; });
+    loader.load(
+      data.file, 
+      (geom) => {
+        geom.computeVertexNormals();
+        const mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.55, metalness: 0.05 });
+        const mesh = new THREE.Mesh(geom, mat);
+        onMesh(mesh);
+      }, 
+      undefined, 
+      (err) => { 
+        console.error(`🚨 Failed to load STL: ${data.file}`, err); 
+        s.loading = false;
+        s.loaded = true; 
+        applyFilters();
+      }
+    );
   }
 }
 
@@ -335,6 +363,41 @@ window.addEventListener('wheel', (e) => {
   hideScrollHint();
   maybeLoadTextures();
 }, { passive: false });
+
+// ---- Touch Pinch-to-Zoom ----
+let initialPinchDistance = null;
+let initialZoom = null;
+
+renderer.domElement.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    dragging = false; // Cancel panning if they are trying to zoom
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    initialPinchDistance = Math.hypot(dx, dy);
+    initialZoom = camera.zoom;
+  }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2 && initialPinchDistance) {
+    e.preventDefault(); // Stop the whole page from zooming/scrolling natively
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.hypot(dx, dy);
+    
+    // Calculate how much the fingers have moved apart/together
+    const scale = dist / initialPinchDistance;
+
+    camera.zoom = Math.max(0.4, Math.min(initialZoom * scale, 5.0));
+    camera.updateProjectionMatrix();
+    
+    maybeLoadTextures();
+  }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchend', () => {
+  initialPinchDistance = null;
+});
 
 // Drag to pan (click + drag anywhere empty)
 let dragging = false, lastPointer = null, pointerDownAt = null, didDrag = false;
@@ -432,19 +495,27 @@ function applyFilters() {
   let visibleCount = 0;
   paintingMeshes.forEach(mesh => {
     const d = mesh.userData;
-    const v = (activeFilters.medium   === 'all' || d.medium   === activeFilters.medium)
-           && (activeFilters.category === 'all' || d.category === activeFilters.category)
-           && (activeFilters.status   === 'all' || d.status   === activeFilters.status);
-    mesh.visible = v;
-    if (v) visibleCount++;
+    // Only check filter conditions to increment the counter
+    const matchesFilter = (activeFilters.medium   === 'all' || d.medium   === activeFilters.medium)
+               && (activeFilters.category === 'all' || d.category === activeFilters.category)
+               && (activeFilters.status   === 'all' || d.status   === activeFilters.status);
+    
+    // Only make visible if it matches the filter AND has finished loading
+    mesh.visible = matchesFilter && d.loaded;
+    if (matchesFilter && !d.isSculpture) visibleCount++; 
   });
-  // Hide/show sculpture meshes too (they're children added separately).
-  sculptureEntries.forEach(s => { if (s.mesh) {
+
+  sculptureEntries.forEach(s => {
     const d = s.data;
-    s.mesh.visible = (activeFilters.medium === 'all' || d.medium === activeFilters.medium)
-                  && (activeFilters.category === 'all' || d.category === activeFilters.category)
-                  && (activeFilters.status === 'all' || d.status === activeFilters.status);
-  }});
+    const matchesFilter = (activeFilters.medium === 'all' || d.medium === activeFilters.medium)
+                   && (activeFilters.category === 'all' || d.category === activeFilters.category)
+                   && (activeFilters.status === 'all' || d.status === activeFilters.status);
+    
+    // Removed the s.plinth visibility check
+    if (s.mesh) s.mesh.visible = matchesFilter && s.loaded;
+    if (matchesFilter) visibleCount++;
+  });
+  
   document.getElementById('count-visible').innerText = String(visibleCount).padStart(2, '0');
 }
 
@@ -464,23 +535,32 @@ document.getElementById('count-visible').innerText = String(totalCount).padStart
 
 // PERF: fake a smooth-feeling loading bar tied to geometry readiness, not networks.
 // Scene is already ready — just animate progress quickly, then dismiss.
-(function runLoader() {
-  const bar = document.getElementById('loading-bar');
-  const pct = document.getElementById('loading-pct');
-  const screen = document.getElementById('loading-screen');
-  let p = 0;
-  const tick = () => {
-    p = Math.min(100, p + (100 - p) * 0.12 + 1.5);
-    bar.style.width = p + '%';
-    pct.innerText = String(Math.floor(p)).padStart(3, '0') + '%';
-    if (p < 99.5) requestAnimationFrame(tick);
-    else {
-      screen.style.opacity = '0';
-      setTimeout(() => { screen.style.display = 'none'; }, 700);
-    }
-  };
-  requestAnimationFrame(tick);
-})();
+// PERF: True loading screen tracking actual Three.js loaders
+const bar = document.getElementById('loading-bar');
+const pct = document.getElementById('loading-pct');
+const screen = document.getElementById('loading-screen');
+
+// Fallback in case nothing is in the immediate camera radius to trigger a load
+let fallbackLoader = setTimeout(() => {
+  screen.style.opacity = '0';
+  setTimeout(() => { screen.style.display = 'none'; }, 700);
+}, 1500);
+
+THREE.DefaultLoadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
+  clearTimeout(fallbackLoader); // Cancel fallback, real items are loading
+  const p = (itemsLoaded / itemsTotal) * 100;
+  bar.style.width = p + '%';
+  pct.innerText = String(Math.floor(p)).padStart(3, '0') + '%';
+};
+
+THREE.DefaultLoadingManager.onLoad = function () {
+  bar.style.width = '100%';
+  pct.innerText = '100%';
+  setTimeout(() => {
+    screen.style.opacity = '0';
+    setTimeout(() => { screen.style.display = 'none'; }, 700);
+  }, 350); // tiny delay so the user registers the 100% mark
+};
 
 // Clock
 
@@ -510,8 +590,15 @@ setTimeout(hideScrollHint, 6000);
 // ---- 13. RESIZE + RENDER --------------------------------------------------
 window.addEventListener('resize', () => {
   const a = window.innerWidth / window.innerHeight;
-  camera.left = -20 * a; camera.right = 20 * a;
+  // Recalculate 'd' on resize so rotating a phone updates the framing correctly
+  const currentD = a < 1 ? 7 / a : 7;
+  
+  camera.left = -currentD * a; 
+  camera.right = currentD * a;
+  camera.top = currentD;
+  camera.bottom = -currentD;
   camera.updateProjectionMatrix();
+  
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
