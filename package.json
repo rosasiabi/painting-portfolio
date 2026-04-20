@@ -1,7 +1,7 @@
 {
   "name": "rosa-painting-portfolio",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "three": "^0.128.0"
+    "three": "^0.149.0"
   },
   "devDependencies": {
     "vite": "^5.0.0"
