@@ -72,6 +72,7 @@
   #loading-pct{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; font-variant-numeric: tabular-nums; }
 
   /* ---------- HEADER / MASTHEAD ---------- */
+  .loading .masthead { display:none; }
   .masthead{
     position:fixed; top:0; left:0; right:0; z-index:20;
     padding: 22px clamp(20px, 3vw, 40px) 0;
@@ -224,7 +225,8 @@
     #loading-screen .middle img {
       width: 80vw;
       height: auto;
-      max-width: 400px;
+      max-width: none;
+      max-height: 80vh;
     }
     
     /* Clean up the masthead */
@@ -250,7 +252,7 @@
   }
 </style>
 </head>
-<body>
+<body class="loading">
 
 <!-- Atmosphere -->
 <div class="grain"></div>

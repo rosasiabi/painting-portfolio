@@ -74,6 +74,14 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.domElement.style.touchAction = 'none';
+
+const cameraTarget = {
+  x: camera.position.x,
+  z: camera.position.z,
+  zoom: camera.zoom
+};
+const cameraSmoothFactor = 0.16;
 document.body.appendChild(renderer.domElement);
 
 // Lighting — warm, even, and reaching the whole studio.
@@ -346,21 +354,24 @@ const intersectionPoint = new THREE.Vector3();
 
 window.addEventListener('wheel', (e) => {
   e.preventDefault();
+  hideScrollHint();
+
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   raycaster.ray.intersectPlane(planeY, intersectionPoint);
   const before = intersectionPoint.clone();
 
-  camera.zoom = Math.max(0.4, Math.min(camera.zoom - e.deltaY * 0.001, 5.0));
+  const newZoom = Math.max(0.4, Math.min(cameraTarget.zoom - e.deltaY * 0.0012, 5.0));
+  cameraTarget.zoom = newZoom;
+  camera.zoom = newZoom;
   camera.updateProjectionMatrix();
 
   raycaster.setFromCamera(mouse, camera);
   raycaster.ray.intersectPlane(planeY, intersectionPoint);
-  camera.position.x += before.x - intersectionPoint.x;
-  camera.position.z += before.z - intersectionPoint.z;
+  cameraTarget.x += before.x - intersectionPoint.x;
+  cameraTarget.z += before.z - intersectionPoint.z;
 
-  hideScrollHint();
   maybeLoadTextures();
 }, { passive: false });
 
@@ -389,6 +400,7 @@ renderer.domElement.addEventListener('touchmove', (e) => {
     const scale = dist / initialPinchDistance;
 
     camera.zoom = Math.max(0.4, Math.min(initialZoom * scale, 5.0));
+    cameraTarget.zoom = camera.zoom;
     camera.updateProjectionMatrix();
     
     maybeLoadTextures();
@@ -412,11 +424,30 @@ window.addEventListener('pointermove', (e) => {
   const dx = e.clientX - lastPointer.x;
   const dy = e.clientY - lastPointer.y;
   if (Math.abs(dx) + Math.abs(dy) > 3) didDrag = true;
-  // Convert screen delta into world delta
-  const worldPerPixelX = (camera.right - camera.left) / window.innerWidth / camera.zoom;
-  const worldPerPixelZ = (camera.top - camera.bottom) / window.innerHeight / camera.zoom;
-  camera.position.x -= dx * worldPerPixelX;
-  camera.position.z -= dy * worldPerPixelZ;
+
+  const prevMouse = {
+    x: (lastPointer.x / window.innerWidth) * 2 - 1,
+    y: -(lastPointer.y / window.innerHeight) * 2 + 1
+  };
+  const currMouse = {
+    x: (e.clientX / window.innerWidth) * 2 - 1,
+    y: -(e.clientY / window.innerHeight) * 2 + 1
+  };
+
+  raycaster.setFromCamera(prevMouse, camera);
+  raycaster.ray.intersectPlane(planeY, intersectionPoint);
+  const prevWorld = intersectionPoint.clone();
+
+  raycaster.setFromCamera(currMouse, camera);
+  raycaster.ray.intersectPlane(planeY, intersectionPoint);
+  const currWorld = intersectionPoint.clone();
+
+  const delta = prevWorld.sub(currWorld);
+  cameraTarget.x += delta.x;
+  cameraTarget.z += delta.z;
+
+  camera.position.x = cameraTarget.x;
+  camera.position.z = cameraTarget.z;
   lastPointer = { x: e.clientX, y: e.clientY };
   maybeLoadTextures();
 });
@@ -543,7 +574,10 @@ const screen = document.getElementById('loading-screen');
 // Fallback in case nothing is in the immediate camera radius to trigger a load
 let fallbackLoader = setTimeout(() => {
   screen.style.opacity = '0';
-  setTimeout(() => { screen.style.display = 'none'; }, 700);
+  setTimeout(() => {
+    screen.style.display = 'none';
+    document.body.classList.remove('loading');
+  }, 700);
 }, 1500);
 
 THREE.DefaultLoadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
@@ -558,7 +592,10 @@ THREE.DefaultLoadingManager.onLoad = function () {
   pct.innerText = '100%';
   setTimeout(() => {
     screen.style.opacity = '0';
-    setTimeout(() => { screen.style.display = 'none'; }, 700);
+    setTimeout(() => {
+      screen.style.display = 'none';
+      document.body.classList.remove('loading');
+    }, 700);
   }, 350); // tiny delay so the user registers the 100% mark
 };
 
@@ -607,6 +644,12 @@ maybeLoadTextures();
 
 function animate() {
   requestAnimationFrame(animate);
+
+  camera.position.x += (cameraTarget.x - camera.position.x) * cameraSmoothFactor;
+  camera.position.z += (cameraTarget.z - camera.position.z) * cameraSmoothFactor;
+  camera.zoom += (cameraTarget.zoom - camera.zoom) * cameraSmoothFactor;
+  camera.updateProjectionMatrix();
+
   renderer.render(scene, camera);
 }
 animate();
