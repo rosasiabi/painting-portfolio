@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="module" src="/@vite/client"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="icon" type="image/png" href="/assets/logo.png">
 
 <!-- PERF: preconnect to CDNs so DNS/TLS happens in parallel with HTML parsing -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -263,7 +265,7 @@
     <span id="loading-count">Preparing works</span>
   </div>
   <div class="middle">
-     <img src="assets/logo.png" alt="Siabi Studio">
+     <img src="/assets/logo.png" alt="Siabi Studio">
   </div>
   <div class="bottom">
     <span id="loading-pct">000%</span>
@@ -278,7 +280,7 @@
     <span class="dot"></span> <span id="count-visible">00</span> / <span id="count-total">00</span> works
   </div>
   <div class="wordmark">
-    <img src="assets/logo.png" alt="Siabi Studio">
+    <img src="/assets/logo.png" alt="Siabi Studio">
     <small>Oil Painting · World Building</small>
   </div>
   <div class="right" id="clock">—</div>
@@ -353,6 +355,6 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js" defer></script>
-<script type="module" src="./script.js"></script>
+<script type="module" src="/script.js"></script>
 </body>
 </html>
