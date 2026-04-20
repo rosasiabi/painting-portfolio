@@ -10,10 +10,10 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 // ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
 const paintingsData = [
-  { fileName: "charlie.jpg", title: "Charlie", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-  { fileName: "teni.jpg", title: "Teni", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
+  { fileName: "charlie.webp", title: "Charlie", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
+  { fileName: "teni.webp", title: "Teni", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "milo.jpg", title: "Milo", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-  { fileName: "andrew.jpg", title: "Andrew", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
+  { fileName: "andrew.webp", title: "Andrew", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "victor.jpg", title: "I sport new balance to avoid a narrow path", size: "40cm x 50cm", medium: "canvas", category: "misc", status: "available", orientation: "portrait" },
 
   { fileName: "bb09.webp", title: "head", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
