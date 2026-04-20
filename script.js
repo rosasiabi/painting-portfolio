@@ -4,6 +4,8 @@
 //  Heavily optimized for fast first paint (see PERF notes throughout).
 // ============================================================================
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 // ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
@@ -284,7 +286,7 @@ function loadSculpture(s) {
   };
 
   if (data.type === 'glb') {
-    const loader = new THREE.GLTFLoader();
+    const loader = new GLTFLoader();
     loader.load(data.file, (gltf) => {
       const m = gltf.scene;
       m.traverse(o => {
@@ -298,7 +300,7 @@ function loadSculpture(s) {
       onMesh(m);
     }, undefined, (err) => { console.warn('GLB failed', err); s.loading = false; });
   } else {
-    const loader = new THREE.STLLoader();
+    const loader = new STLLoader();
     loader.load(data.file, (geom) => {
       geom.computeVertexNormals();
       const mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.55, metalness: 0.05 });
