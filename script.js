@@ -182,7 +182,7 @@ paintingsData.forEach((data, idx) => {
   mesh.position.set(x, dims.thickness / 2 + 0.001, z);
   mesh.rotation.y = (Math.random() - 0.5) * 0.9;
 
-  data.imagePath = `images/${data.medium}/${data.fileName}`;
+  data.imagePath = `/images/${data.medium}/${data.fileName}`;
   data.index = idx + 1;
   data.faceMat = faceMat;
   data.loaded = false;
