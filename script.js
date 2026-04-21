@@ -553,21 +553,31 @@ function applyFilters() {
 
 document.querySelectorAll('#rail button').forEach(btn => {
   btn.addEventListener('click', () => {
-    // 1. Reset the logic: force all categories back to 'all'
+    // 1. Check if the clicked button is ALREADY active, and if it's the "All" button
+    const isActive = btn.classList.contains('active');
+    const isAllButton = btn.dataset.value === 'all';
+
+    // 2. Reset the data logic: force all categories back to 'all'
     activeFilters.medium = 'all';
     activeFilters.category = 'all';
     activeFilters.status = 'all';
 
-    // 2. Apply the newly clicked filter to its specific category
-    const f = btn.dataset.filter;
-    const v = btn.dataset.value;
-    activeFilters[f] = v;
-
-    // 3. Visuals: Remove the 'active' class from EVERY button
+    // 3. Remove the 'active' class from EVERY button visually
     document.querySelectorAll('#rail button').forEach(b => b.classList.remove('active'));
-    
-    // 4. Visuals: Add the 'active' class ONLY to the clicked button
-    btn.classList.add('active');
+
+    // 4. Toggle logic
+    if (isActive && !isAllButton) {
+      // If they clicked an active specific filter, turn it off and revert to "All"
+      const allButton = document.querySelector('#rail button[data-value="all"]');
+      if (allButton) allButton.classList.add('active');
+      
+    } else {
+      // Otherwise, act normally: apply the specific filter and make it active
+      const f = btn.dataset.filter;
+      const v = btn.dataset.value;
+      activeFilters[f] = v;
+      btn.classList.add('active');
+    }
 
     // 5. Update the 3D scene
     applyFilters();
