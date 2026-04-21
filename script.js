@@ -14,7 +14,7 @@ const paintingsData = [
   { fileName: "teni.webp", title: "Teni", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "milo.jpg", title: "Milo", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "andrew.webp", title: "Andrew", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-  { fileName: "victor.jpg", title: "I sport new balance to avoid a narrow path", size: "40cm x 50cm", medium: "canvas", category: "misc", status: "available", orientation: "portrait" },
+  { fileName: "victor.webp", title: "I sport new balance to avoid a narrow path", size: "40cm x 50cm", medium: "canvas", category: "misc", status: "available", orientation: "portrait" },
 
   { fileName: "bb09.webp", title: "head", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb01.webp", title: "leg", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
@@ -27,7 +27,8 @@ const paintingsData = [
   { fileName: "bb08.webp", title: "armpit", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
   { fileName: "bb10.webp", title: "upper body", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
   { fileName: "CAKE.webp", title: "Aging backwards", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
-  { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" }
+  { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
+  { fileName: "tilda.webp", title: "Tilda do us part", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
 ];
 
 // Sculptures — loaded lazily when camera is near.
@@ -552,9 +553,23 @@ function applyFilters() {
 
 document.querySelectorAll('#rail button').forEach(btn => {
   btn.addEventListener('click', () => {
-    const f = btn.dataset.filter, v = btn.dataset.value;
+    // 1. Reset the logic: force all categories back to 'all'
+    activeFilters.medium = 'all';
+    activeFilters.category = 'all';
+    activeFilters.status = 'all';
+
+    // 2. Apply the newly clicked filter to its specific category
+    const f = btn.dataset.filter;
+    const v = btn.dataset.value;
     activeFilters[f] = v;
-    document.querySelectorAll(`#rail button[data-filter="${f}"]`).forEach(b => b.classList.toggle('active', b === btn));
+
+    // 3. Visuals: Remove the 'active' class from EVERY button
+    document.querySelectorAll('#rail button').forEach(b => b.classList.remove('active'));
+    
+    // 4. Visuals: Add the 'active' class ONLY to the clicked button
+    btn.classList.add('active');
+
+    // 5. Update the 3D scene
     applyFilters();
   });
 });
