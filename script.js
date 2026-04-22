@@ -29,6 +29,8 @@ const paintingsData = [
   { fileName: "CAKE.webp", title: "Aging backwards", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
   { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
   { fileName: "tilda.webp", title: "Tilda do us part", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
+  { fileName: "franca.webp", title: "Franca lost her drink", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
+  { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" },
 ];
 
 // Sculptures — loaded lazily when camera is near.
