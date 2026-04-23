@@ -46,7 +46,7 @@ function getDimensions(sizeStr, medium, orientation) {
   const s = sizeStr.toLowerCase().replace(/\s/g, '');
   if (s.includes("a5")) { w = 1.48; h = 2.1; }
   else if (s.includes("a4")) { w = 2.1; h = 2.97; }
-  else if (s.includes("a2")) { w = 4.2; h = 5.94; }
+  else if (s.includes("a2")) { w = 5.94; h = 4.2; }
   else if (s.includes("40cmx50cm")) { w = 4.0; h = 5.0; }
   if (orientation === "landscape") { [w, h] = [h, w]; }
   
