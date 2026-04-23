@@ -31,6 +31,7 @@ const paintingsData = [
   { fileName: "tilda.webp", title: "Tilda do us part", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
   { fileName: "franca.webp", title: "Franca lost her drink", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
   { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" },
+  { fileName: "charles.webp", title: "I have meddled...If that is the word", size: "A2", medium: "paper", category: "misc", status: "available", orientation: "Landscape" }
 ];
 
 // Sculptures — loaded lazily when camera is near.
