@@ -9,7 +9,7 @@ export default {
     build: {
         outDir: './dist',
         emptyOutDir: true,
-        sourcemap: false,
+        sourcemap: true,
         chunkSizeWarningLimit: 1000, // Add this line here
         rollupOptions: {
             input: {
