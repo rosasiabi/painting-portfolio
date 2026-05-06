@@ -22,24 +22,49 @@ const artworks = [
   { fileName: 'tow.webp', title: 'Turkish Oil Wrestling', size: 'A5', medium: 'paper', category: 'misc', status: 'available' }
 ].map((art) => ({ ...art, slug: art.fileName.replace(/\.[^.]+$/, '') }));
 
+const noPrintEdition = new Set(['andrew.webp', 'charlie.webp', 'teni.webp', 'milo.webp']);
 artworks.forEach((art) => {
-  art.printEdition = { available: 20, total: 20 };
+  art.printEdition = noPrintEdition.has(art.fileName) ? null : { available: 20, total: 20 };
+  art.canEnquireOriginal = art.status === 'available';
+  art.canEnquirePrint = Boolean(art.printEdition && art.printEdition.available > 0);
 });
 
 const params = new URLSearchParams(window.location.search);
 const requestedSlug = params.get('artwork') || artworks[0].slug;
 const art = artworks.find((item) => item.slug === requestedSlug) || artworks[0];
-const subject = art.status === 'available'
-  ? `Artwork enquiry: ${art.title} - print edition 20/20 or original`
-  : `Artwork enquiry: ${art.title} - print edition 20/20`;
+const enquireButton = document.getElementById('enquire-artwork');
+const enquiryNote = document.getElementById('enquiry-note');
+const formats = art.canEnquireOriginal && art.canEnquirePrint
+  ? `print edition ${art.printEdition.available}/${art.printEdition.total} or original`
+  : art.canEnquirePrint
+    ? `print edition ${art.printEdition.available}/${art.printEdition.total}`
+    : 'original';
+const subject = `Artwork enquiry: ${art.title} - ${formats}`;
 
 document.title = `${art.title} | Siabi Studio Enquiry`;
 document.getElementById('art-title').innerText = art.title;
 document.getElementById('art-size').innerText = art.size;
-document.getElementById('art-edition').innerText = `${art.printEdition.available}/${art.printEdition.total}`;
+document.getElementById('art-edition').innerText = art.printEdition ? `${art.printEdition.available}/${art.printEdition.total}` : 'No prints';
 document.getElementById('art-status').innerText = art.status;
 document.getElementById('art-medium').innerText = `${art.medium} / ${art.category}`;
-document.getElementById('art-format').innerText = art.status === 'available' ? 'Print or original enquiry' : 'Print enquiry';
+document.getElementById('art-format').innerText = art.canEnquireOriginal && art.canEnquirePrint
+  ? 'Print or original enquiry'
+  : art.canEnquirePrint
+    ? 'Print enquiry'
+    : art.canEnquireOriginal
+      ? 'Original enquiry'
+      : 'Unavailable';
 document.getElementById('art-image').src = `/images/${art.medium}/${art.fileName}`;
 document.getElementById('art-image').alt = art.title;
-document.getElementById('enquire-artwork').href = `/contact.html?subject=${encodeURIComponent(subject)}`;
+
+if (art.canEnquireOriginal || art.canEnquirePrint) {
+  enquireButton.href = `/contact.html?subject=${encodeURIComponent(subject)}`;
+  enquireButton.innerText = art.canEnquireOriginal && art.canEnquirePrint
+    ? 'Enquire about print / original'
+    : art.canEnquirePrint
+      ? 'Enquire about print'
+      : 'Enquire about original';
+} else {
+  enquireButton.remove();
+  enquiryNote.innerText = 'No prints are available for this work.';
+}

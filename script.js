@@ -34,8 +34,9 @@ const paintingsData = [
   { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" }
 ];
 
+const noPrintEdition = new Set(['andrew.webp', 'charlie.webp', 'teni.webp', 'milo.webp']);
 paintingsData.forEach((data) => {
-  data.printEdition = { available: 20, total: 20 };
+  data.printEdition = noPrintEdition.has(data.fileName) ? null : { available: 20, total: 20 };
 });
 
 // Sculptures — loaded lazily when camera is near.
@@ -203,7 +204,16 @@ paintingsData.forEach((data, idx) => {
   mesh.rotation.y = (Math.random() - 0.5) * 0.9;
 
   data.imagePath = `/images/${data.medium}/${data.fileName}`;
-  data.enquiryPath = `/contact.html?subject=${encodeURIComponent(`Artwork enquiry: ${data.title}`)}`;
+  data.canEnquireOriginal = data.status === 'available';
+  data.canEnquirePrint = Boolean(data.printEdition && data.printEdition.available > 0);
+  if (data.canEnquireOriginal || data.canEnquirePrint) {
+    const formats = data.canEnquireOriginal && data.canEnquirePrint
+      ? `print edition ${data.printEdition.available}/${data.printEdition.total} or original`
+      : data.canEnquirePrint
+        ? `print edition ${data.printEdition.available}/${data.printEdition.total}`
+        : 'original';
+    data.enquiryPath = `/contact.html?subject=${encodeURIComponent(`Artwork enquiry: ${data.title} - ${formats}`)}`;
+  }
   data.index = idx + 1;
   data.faceMat = faceMat;
   data.loaded = false;
@@ -474,7 +484,7 @@ function openInfo(d) {
   document.getElementById('info-medium').innerText = (d.medium || '').toUpperCase();
   document.getElementById('info-title').innerText = d.title;
   document.getElementById('info-size').innerText = d.size;
-  document.getElementById('info-edition').innerText = d.printEdition ? `${d.printEdition.available}/${d.printEdition.total}` : '—';
+  document.getElementById('info-edition').innerText = d.printEdition ? `${d.printEdition.available}/${d.printEdition.total}` : 'No prints';
   document.getElementById('info-category').innerText = d.category;
   const statusEl = document.getElementById('info-status');
   statusEl.className = 'status-tag ' + (d.status || '').replace(' ', '-');
@@ -484,7 +494,11 @@ function openInfo(d) {
   const enquireLink = document.getElementById('info-enquire-link');
   if (d.imagePath && d.enquiryPath) {
     enquireLink.href = d.enquiryPath;
-    enquireLink.innerText = d.status === 'available' ? 'Enquire about print / original' : 'Enquire about print';
+    enquireLink.innerText = d.canEnquireOriginal && d.canEnquirePrint
+      ? 'Enquire about print / original'
+      : d.canEnquirePrint
+        ? 'Enquire about print'
+        : 'Enquire about original';
     enquireLink.classList.add('show');
   } else {
     enquireLink.classList.remove('show');
