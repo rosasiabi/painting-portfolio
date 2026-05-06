@@ -243,62 +243,41 @@ sculpturesData.forEach((sdata, i) => {
   });
 });
 
-// ---- 8. LAZY TEXTURE + MODEL LOADER ---------------------------------------
+// ---- 8. TEXTURE + MODEL LOADER --------------------------------------------
 const LOAD_RADIUS_SQ = 60 * 60; // world units squared
-const DROP_HEIGHT = 4.8;
-const DROP_DURATION = 1400;
-const DROP_STAGGER_MS = 90;
-let textureQueue = [];
-let textureQueueIndex = 0;
-let textureQueueRunning = false;
-let firstPaintingReady = false;
-const activeDrops = [];
+let paintingTexturesLoaded = 0;
 
 function cameraTargetXZ() {
   return { x: camera.position.x - 5, z: camera.position.z - 7 };
 }
 
-function startTextureQueue() {
-  if (textureQueueRunning) return;
-  textureQueue = [...paintingMeshes];
-  textureQueueRunning = true;
-  loadNextPaintingTexture();
-}
-
 function updateLoadingProgress() {
-  if (!bar || !pct || !textureQueue.length) return;
-  const p = Math.max(1, Math.round((textureQueueIndex / textureQueue.length) * 100));
+  if (!bar || !pct || !paintingMeshes.length) return;
+  const p = Math.round((paintingTexturesLoaded / paintingMeshes.length) * 100);
   bar.style.width = p + '%';
   pct.innerText = String(p).padStart(3, '0') + '%';
 }
 
-function revealAfterFirstPainting() {
-  if (firstPaintingReady) return;
-  firstPaintingReady = true;
-  bar.style.width = '100%';
-  pct.innerText = '100%';
-  setTimeout(dismissLoadingScreen, 220);
+function finishPaintingTexture(mesh) {
+  const d = mesh.userData;
+  d.loaded = true;
+  d.loading = false;
+  paintingTexturesLoaded++;
+  updateLoadingProgress();
+
+  if (paintingTexturesLoaded === paintingMeshes.length) {
+    applyFilters();
+    setTimeout(dismissLoadingScreen, 250);
+  }
 }
 
-function preparePaintingDrop(mesh) {
-  const d = mesh.userData;
-  const targetY = d.floorY || mesh.position.y;
-  mesh.position.y = targetY + DROP_HEIGHT;
-  d.drop = {
-    start: performance.now(),
-    fromY: mesh.position.y,
-    targetY,
-    duration: DROP_DURATION
-  };
-  activeDrops.push(mesh);
-}
+function loadAllPaintingTextures() {
+  updateLoadingProgress();
 
-function loadNextPaintingTexture() {
-  if (textureQueueIndex >= textureQueue.length) return;
-
-  const mesh = textureQueue[textureQueueIndex];
-  const d = mesh.userData;
-  d.loading = true;
+  paintingMeshes.forEach((mesh) => {
+    const d = mesh.userData;
+    if (d.loading || d.loaded) return;
+    d.loading = true;
 
   textureLoader.load(
     d.imagePath,
@@ -307,33 +286,20 @@ function loadNextPaintingTexture() {
       tex.anisotropy = 4;
       d.faceMat.map = tex;
       d.faceMat.needsUpdate = true;
-      d.loaded = true;
-      d.loading = false;
-      textureQueueIndex++;
-      preparePaintingDrop(mesh);
-      applyFilters();
-      revealAfterFirstPainting();
-      updateLoadingProgress();
-      setTimeout(loadNextPaintingTexture, DROP_DURATION + DROP_STAGGER_MS);
+      finishPaintingTexture(mesh);
     },
     undefined,
     () => {
       console.error(`Failed to load texture: ${d.imagePath}`);
-      d.loaded = true;
-      d.loading = false;
-      textureQueueIndex++;
-      preparePaintingDrop(mesh);
-      applyFilters();
-      revealAfterFirstPainting();
-      updateLoadingProgress();
-      setTimeout(loadNextPaintingTexture, DROP_DURATION + DROP_STAGGER_MS);
+      finishPaintingTexture(mesh);
     }
   );
+  });
 }
 
-function maybeLoadTextures() {
+function maybeLoadSculptures() {
   const { x: cx, z: cz } = cameraTargetXZ();
-  if (false) {
+  /*
   for (const mesh of paintingMeshes) {
     const d = mesh.userData;
     if (d.isSculpture || d.loaded || d.loading) continue;
@@ -361,7 +327,7 @@ function maybeLoadTextures() {
     }
   }
   
-  }
+  */
   for (const s of sculptureEntries) {
     if (s.loaded || s.loading) continue;
     const dx = s.x - cx, dz = s.z - cz;
@@ -372,6 +338,7 @@ function maybeLoadTextures() {
   }
 }
 
+/*
 function updateDropAnimations(now) {
   for (let i = activeDrops.length - 1; i >= 0; i--) {
     const mesh = activeDrops[i];
@@ -392,6 +359,7 @@ function updateDropAnimations(now) {
     }
   }
 }
+*/
 
 function loadSculpture(s) {
   const { data } = s;
@@ -495,7 +463,7 @@ window.addEventListener('wheel', (e) => {
   cameraTarget.x += before.x - intersectionPoint.x;
   cameraTarget.z += before.z - intersectionPoint.z;
 
-  maybeLoadTextures();
+  maybeLoadSculptures();
 }, { passive: false });
 
 // ---- Touch Pinch-to-Zoom ----
@@ -526,7 +494,7 @@ renderer.domElement.addEventListener('touchmove', (e) => {
     cameraTarget.zoom = camera.zoom;
     camera.updateProjectionMatrix();
     
-    maybeLoadTextures();
+    maybeLoadSculptures();
   }
 }, { passive: false });
 
@@ -572,7 +540,7 @@ window.addEventListener('pointermove', (e) => {
   camera.position.x = cameraTarget.x;
   camera.position.z = cameraTarget.z;
   lastPointer = { x: e.clientX, y: e.clientY };
-  maybeLoadTextures();
+  maybeLoadSculptures();
 });
 
 // ---- 10. INTERACTION (click → info card; click again → modal) -------------
@@ -783,19 +751,17 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Load paintings one-by-one. The page opens as soon as the first artwork lands.
-startTextureQueue();
-maybeLoadTextures();
+// Load all paintings before revealing the gallery.
+loadAllPaintingTextures();
+maybeLoadSculptures();
 
 function animate() {
   requestAnimationFrame(animate);
-  const now = performance.now();
 
   camera.position.x += (cameraTarget.x - camera.position.x) * cameraSmoothFactor;
   camera.position.z += (cameraTarget.z - camera.position.z) * cameraSmoothFactor;
   camera.zoom += (cameraTarget.zoom - camera.zoom) * cameraSmoothFactor;
   camera.updateProjectionMatrix();
-  updateDropAnimations(now);
 
   renderer.render(scene, camera);
 }
