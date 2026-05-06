@@ -10,6 +10,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 // ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
 const paintingsData = [
+  { fileName: "charles.webp", title: "I have meddled...If that is the word", size: "A2", medium: "paper", category: "misc", status: "available", orientation: "Landscape" },
   { fileName: "charlie.webp", title: "Charlie", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "teni.webp", title: "Teni", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "milo.webp", title: "Milo", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
@@ -30,8 +31,7 @@ const paintingsData = [
   { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
   { fileName: "tilda.webp", title: "Tilda do us part", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
   { fileName: "franca.webp", title: "Franca lost her drink", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
-  { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" },
-  { fileName: "charles.webp", title: "I have meddled...If that is the word", size: "A2", medium: "paper", category: "misc", status: "available", orientation: "Landscape" }
+  { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" }
 ];
 
 // Sculptures — loaded lazily when camera is near.
