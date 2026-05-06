@@ -11,26 +11,25 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 // ---- 1. DATA ---------------------------------------------------------------
 const paintingsData = [
   { fileName: "charles.webp", title: "I have meddled...If that is the word", size: "A2", medium: "paper", category: "misc", status: "available", orientation: "Landscape" },
+  { fileName: "bb09.webp", title: "head", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "charlie.webp", title: "Charlie", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
+  { fileName: "bb02.webp", title: "thigh", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
+  { fileName: "bb06.webp", title: "chest", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "teni.webp", title: "Teni", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
+   { fileName: "CAKE.webp", title: "Aging backwards", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
   { fileName: "milo.webp", title: "Milo", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "andrew.webp", title: "Andrew", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
   { fileName: "victor.webp", title: "I sport new balance to avoid a narrow path", size: "40cm x 50cm", medium: "canvas", category: "misc", status: "available", orientation: "portrait" },
-
-  { fileName: "bb09.webp", title: "head", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb01.webp", title: "leg", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb07.webp", title: "nipple", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "landscape" },
   { fileName: "bb03.webp", title: "half", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb04.webp", title: "fist", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb05.webp", title: "v", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
-  { fileName: "bb02.webp", title: "thigh", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
-  { fileName: "bb06.webp", title: "chest", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
   { fileName: "bb08.webp", title: "armpit", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
   { fileName: "bb10.webp", title: "upper body", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
-  { fileName: "CAKE.webp", title: "Aging backwards", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
   { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
   { fileName: "tilda.webp", title: "Tilda do us part", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
-  { fileName: "franca.webp", title: "Franca lost her drink", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
+  { fileName: "franca.webp", title: "OH NO! Franca lost her drink", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
   { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" }
 ];
 
@@ -200,7 +199,8 @@ paintingsData.forEach((data, idx) => {
   const mesh = new THREE.Mesh(geometry, mats);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
-  mesh.position.set(x, dims.thickness / 2 + 0.001, z);
+  data.floorY = dims.thickness / 2 + 0.001;
+  mesh.position.set(x, data.floorY, z);
   mesh.rotation.y = (Math.random() - 0.5) * 0.9;
 
   data.imagePath = `/images/${data.medium}/${data.fileName}`;
@@ -245,13 +245,103 @@ sculpturesData.forEach((sdata, i) => {
 
 // ---- 8. LAZY TEXTURE + MODEL LOADER ---------------------------------------
 const LOAD_RADIUS_SQ = 60 * 60; // world units squared
+const DROP_HEIGHT = 6.2;
+const DROP_DURATION = 1150;
+const DROP_STAGGER_MS = 135;
+let textureQueue = [];
+let textureQueueIndex = 0;
+let textureQueueRunning = false;
+let firstPaintingReady = false;
+const activeDrops = [];
 
 function cameraTargetXZ() {
   return { x: camera.position.x - 5, z: camera.position.z - 7 };
 }
 
+function startTextureQueue() {
+  if (textureQueueRunning) return;
+  textureQueue = [...paintingMeshes];
+  textureQueueRunning = true;
+  loadNextPaintingTexture();
+}
+
+function updateLoadingProgress() {
+  if (!bar || !pct || !textureQueue.length) return;
+  const p = Math.max(1, Math.round((textureQueueIndex / textureQueue.length) * 100));
+  bar.style.width = p + '%';
+  pct.innerText = String(p).padStart(3, '0') + '%';
+}
+
+function revealAfterFirstPainting() {
+  if (firstPaintingReady) return;
+  firstPaintingReady = true;
+  bar.style.width = '100%';
+  pct.innerText = '100%';
+  setTimeout(dismissLoadingScreen, 220);
+}
+
+function preparePaintingDrop(mesh) {
+  const d = mesh.userData;
+  const targetY = d.floorY || mesh.position.y;
+  mesh.position.y = targetY + DROP_HEIGHT;
+  const targetRotationY = mesh.rotation.y;
+  const targetRotationZ = mesh.rotation.z;
+  mesh.rotation.y = targetRotationY + (Math.random() - 0.5) * 0.18;
+  mesh.rotation.z = targetRotationZ + (Math.random() - 0.5) * 0.08;
+  d.drop = {
+    start: performance.now(),
+    fromY: mesh.position.y,
+    targetY,
+    fromRotationY: mesh.rotation.y,
+    targetRotationY,
+    fromRotationZ: mesh.rotation.z,
+    targetRotationZ,
+    duration: DROP_DURATION
+  };
+  activeDrops.push(mesh);
+}
+
+function loadNextPaintingTexture() {
+  if (textureQueueIndex >= textureQueue.length) return;
+
+  const mesh = textureQueue[textureQueueIndex];
+  const d = mesh.userData;
+  d.loading = true;
+
+  textureLoader.load(
+    d.imagePath,
+    (tex) => {
+      tex.encoding = THREE.sRGBEncoding;
+      tex.anisotropy = 4;
+      d.faceMat.map = tex;
+      d.faceMat.needsUpdate = true;
+      d.loaded = true;
+      d.loading = false;
+      textureQueueIndex++;
+      preparePaintingDrop(mesh);
+      applyFilters();
+      revealAfterFirstPainting();
+      updateLoadingProgress();
+      setTimeout(loadNextPaintingTexture, DROP_STAGGER_MS);
+    },
+    undefined,
+    () => {
+      console.error(`Failed to load texture: ${d.imagePath}`);
+      d.loaded = true;
+      d.loading = false;
+      textureQueueIndex++;
+      preparePaintingDrop(mesh);
+      applyFilters();
+      revealAfterFirstPainting();
+      updateLoadingProgress();
+      setTimeout(loadNextPaintingTexture, DROP_STAGGER_MS);
+    }
+  );
+}
+
 function maybeLoadTextures() {
   const { x: cx, z: cz } = cameraTargetXZ();
+  if (false) {
   for (const mesh of paintingMeshes) {
     const d = mesh.userData;
     if (d.isSculpture || d.loaded || d.loading) continue;
@@ -279,12 +369,44 @@ function maybeLoadTextures() {
     }
   }
   
+  }
   for (const s of sculptureEntries) {
     if (s.loaded || s.loading) continue;
     const dx = s.x - cx, dz = s.z - cz;
     if (dx * dx + dz * dz < LOAD_RADIUS_SQ) {
       s.loading = true;
       loadSculpture(s);
+    }
+  }
+}
+
+function updateDropAnimations(now) {
+  for (let i = activeDrops.length - 1; i >= 0; i--) {
+    const mesh = activeDrops[i];
+    const drop = mesh.userData.drop;
+    if (!drop) {
+      activeDrops.splice(i, 1);
+      continue;
+    }
+
+    const t = Math.min((now - drop.start) / drop.duration, 1);
+    const fall = t < 0.82
+      ? 1 - Math.pow(1 - (t / 0.82), 4)
+      : 1;
+    const settleT = t <= 0.82 ? 0 : (t - 0.82) / 0.18;
+    const settle = 1 - Math.pow(1 - settleT, 3);
+    const lift = Math.sin(settleT * Math.PI) * 0.12 * (1 - settle);
+
+    mesh.position.y = drop.fromY + (drop.targetY - drop.fromY) * fall + lift;
+    mesh.rotation.y = drop.fromRotationY + (drop.targetRotationY - drop.fromRotationY) * fall;
+    mesh.rotation.z = drop.fromRotationZ + (drop.targetRotationZ - drop.fromRotationZ) * fall;
+
+    if (t === 1) {
+      mesh.position.y = drop.targetY;
+      mesh.rotation.y = drop.targetRotationY;
+      mesh.rotation.z = drop.targetRotationZ;
+      delete mesh.userData.drop;
+      activeDrops.splice(i, 1);
     }
   }
 }
@@ -631,33 +753,13 @@ const bar = document.getElementById('loading-bar');
 const pct = document.getElementById('loading-pct');
 const screen = document.getElementById('loading-screen');
 
-// Fallback in case nothing is in the immediate camera radius to trigger a load
-let fallbackLoader = setTimeout(() => {
+function dismissLoadingScreen() {
   screen.style.opacity = '0';
   setTimeout(() => {
     screen.style.display = 'none';
     document.body.classList.remove('loading');
   }, 700);
-}, 1500);
-
-THREE.DefaultLoadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
-  clearTimeout(fallbackLoader); // Cancel fallback, real items are loading
-  const p = (itemsLoaded / itemsTotal) * 100;
-  bar.style.width = p + '%';
-  pct.innerText = String(Math.floor(p)).padStart(3, '0') + '%';
-};
-
-THREE.DefaultLoadingManager.onLoad = function () {
-  bar.style.width = '100%';
-  pct.innerText = '100%';
-  setTimeout(() => {
-    screen.style.opacity = '0';
-    setTimeout(() => {
-      screen.style.display = 'none';
-      document.body.classList.remove('loading');
-    }, 700);
-  }, 350); // tiny delay so the user registers the 100% mark
-};
+}
 
 // Clock
 
@@ -699,16 +801,19 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Initial lazy-load pass (load whatever's already near the camera)
+// Load paintings one-by-one. The page opens as soon as the first artwork lands.
+startTextureQueue();
 maybeLoadTextures();
 
 function animate() {
   requestAnimationFrame(animate);
+  const now = performance.now();
 
   camera.position.x += (cameraTarget.x - camera.position.x) * cameraSmoothFactor;
   camera.position.z += (cameraTarget.z - camera.position.z) * cameraSmoothFactor;
   camera.zoom += (cameraTarget.zoom - camera.zoom) * cameraSmoothFactor;
   camera.updateProjectionMatrix();
+  updateDropAnimations(now);
 
   renderer.render(scene, camera);
 }
