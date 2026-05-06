@@ -34,6 +34,10 @@ const paintingsData = [
   { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" }
 ];
 
+paintingsData.forEach((data) => {
+  data.printEdition = { available: 20, total: 20 };
+});
+
 // Sculptures — loaded lazily when camera is near.
 const sculpturesData = [
   { file: "models/3d_model_for_usb.glb", type: "glb", title: "USB — object study", size: "∼ 6cm", medium: "sculpture", category: "object", status: "available", scale: 6, color: 0xc96a3d },
@@ -470,6 +474,7 @@ function openInfo(d) {
   document.getElementById('info-medium').innerText = (d.medium || '').toUpperCase();
   document.getElementById('info-title').innerText = d.title;
   document.getElementById('info-size').innerText = d.size;
+  document.getElementById('info-edition').innerText = d.printEdition ? `${d.printEdition.available}/${d.printEdition.total}` : '—';
   document.getElementById('info-category').innerText = d.category;
   const statusEl = document.getElementById('info-status');
   statusEl.className = 'status-tag ' + (d.status || '').replace(' ', '-');

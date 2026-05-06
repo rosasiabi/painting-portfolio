@@ -22,16 +22,21 @@ const artworks = [
   { fileName: 'tow.webp', title: 'Turkish Oil Wrestling', size: 'A5', medium: 'paper', category: 'misc', status: 'available' }
 ].map((art) => ({ ...art, slug: art.fileName.replace(/\.[^.]+$/, '') }));
 
+artworks.forEach((art) => {
+  art.printEdition = { available: 20, total: 20 };
+});
+
 const params = new URLSearchParams(window.location.search);
 const requestedSlug = params.get('artwork') || artworks[0].slug;
 const art = artworks.find((item) => item.slug === requestedSlug) || artworks[0];
 const subject = art.status === 'available'
-  ? `Artwork enquiry: ${art.title} - print or original`
-  : `Artwork enquiry: ${art.title} - print`;
+  ? `Artwork enquiry: ${art.title} - print edition 20/20 or original`
+  : `Artwork enquiry: ${art.title} - print edition 20/20`;
 
 document.title = `${art.title} | Siabi Studio Enquiry`;
 document.getElementById('art-title').innerText = art.title;
 document.getElementById('art-size').innerText = art.size;
+document.getElementById('art-edition').innerText = `${art.printEdition.available}/${art.printEdition.total}`;
 document.getElementById('art-status').innerText = art.status;
 document.getElementById('art-medium').innerText = `${art.medium} / ${art.category}`;
 document.getElementById('art-format').innerText = art.status === 'available' ? 'Print or original enquiry' : 'Print enquiry';
