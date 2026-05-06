@@ -393,11 +393,7 @@ function updateDropAnimations(now) {
     const fall = t < 0.82
       ? 1 - Math.pow(1 - (t / 0.82), 4)
       : 1;
-    const settleT = t <= 0.82 ? 0 : (t - 0.82) / 0.18;
-    const settle = 1 - Math.pow(1 - settleT, 3);
-    const lift = Math.sin(settleT * Math.PI) * 0.12 * (1 - settle);
-
-    mesh.position.y = drop.fromY + (drop.targetY - drop.fromY) * fall + lift;
+    mesh.position.y = drop.fromY + (drop.targetY - drop.fromY) * fall;
     mesh.rotation.y = drop.fromRotationY + (drop.targetRotationY - drop.fromRotationY) * fall;
     mesh.rotation.z = drop.fromRotationZ + (drop.targetRotationZ - drop.fromRotationZ) * fall;
 
