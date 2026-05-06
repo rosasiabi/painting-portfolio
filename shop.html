@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<title>Siabi Studio Shop</title>
+<title>Artwork Enquiry | Siabi Studio</title>
 <style>
   :root{
     --paper:#dedfda;
@@ -66,23 +66,17 @@
   dt{ color:var(--muted); text-transform:uppercase; font-size:9.5px; letter-spacing:.22em; }
   dd{ margin:0; }
   .choices{ display:grid; gap:10px; margin-top:18px; }
-  .checkout{
+  .enquire-button{
     width:100%; padding:14px 16px; border:1px solid var(--ink);
     background:var(--ink); color:var(--paper); text-align:center; text-decoration:none;
     font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em;
     text-transform:uppercase; transition:background .18s ease, border-color .18s ease, color .18s ease;
   }
-  .checkout:hover{ background:var(--accent); border-color:var(--accent); color:var(--ink); }
-  .checkout[aria-disabled="true"]{
-    background:transparent; color:var(--muted); border-color:var(--muted); cursor:not-allowed;
-  }
+  .enquire-button:hover{ background:var(--accent); border-color:var(--accent); color:var(--ink); }
   .note{
     margin-top:18px; color:var(--muted); font-family:'JetBrains Mono',monospace;
     font-size:10px; letter-spacing:.12em; line-height:1.7; text-transform:uppercase;
   }
-  .fallback{ display:none; margin-top:18px; }
-  .fallback.show{ display:block; }
-  .fallback a{ color:var(--ink); }
   @media (max-width: 820px){
     header{ align-items:center; }
     header span{ display:none; }
@@ -97,7 +91,7 @@
 <header>
   <a href="/">Back to index</a>
   <img class="logo" src="/assets/logo.png" alt="Siabi Studio">
-  <span>Stripe checkout</span>
+  <span>Studio enquiry</span>
 </header>
 
 <main>
@@ -110,14 +104,12 @@
     <dl>
       <dt>Size</dt><dd id="art-size">-</dd>
       <dt>Status</dt><dd id="art-status">-</dd>
-      <dt>Format</dt><dd>Print or original work</dd>
+      <dt>Format</dt><dd id="art-format">Print enquiry</dd>
     </dl>
     <div class="choices">
-      <a class="checkout" id="buy-print" href="#">Buy print</a>
-      <a class="checkout" id="buy-original" href="#">Buy original</a>
+      <a class="enquire-button" id="enquire-artwork" href="/contact.html">Enquire about this work</a>
     </div>
-    <p class="note" id="checkout-note">Checkout opens on Stripe's hosted payment page. Payments are created server-side so your Stripe secret key never appears in the browser.</p>
-    <p class="note fallback" id="fallback-note">Checkout is not configured for this piece yet. <a id="enquire-link" href="/contact.html">Enquire by form</a>.</p>
+    <p class="note" id="enquiry-note">The enquiry form will include this artwork in the subject so Rosa knows which piece you are asking about.</p>
   </section>
 </main>
 

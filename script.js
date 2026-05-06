@@ -199,7 +199,7 @@ paintingsData.forEach((data, idx) => {
   mesh.rotation.y = (Math.random() - 0.5) * 0.9;
 
   data.imagePath = `/images/${data.medium}/${data.fileName}`;
-  data.shopPath = `/shop.html?artwork=${encodeURIComponent(data.fileName.replace(/\.[^.]+$/, ''))}`;
+  data.enquiryPath = `/contact.html?subject=${encodeURIComponent(`Artwork enquiry: ${data.title}`)}`;
   data.index = idx + 1;
   data.faceMat = faceMat;
   data.loaded = false;
@@ -476,18 +476,18 @@ function openInfo(d) {
   statusEl.innerText = d.status;
   const hint = document.getElementById('info-hint');
   hint.innerText = d.imagePath ? 'Click again — enlarge →' : 'Sculpture — 3D work';
-  const shopLink = document.getElementById('info-shop-link');
-  if (d.imagePath && d.shopPath) {
-    shopLink.href = d.shopPath;
-    shopLink.innerText = d.status === 'available' ? 'Shop print / original' : 'Shop print';
-    shopLink.classList.add('show');
+  const enquireLink = document.getElementById('info-enquire-link');
+  if (d.imagePath && d.enquiryPath) {
+    enquireLink.href = d.enquiryPath;
+    enquireLink.innerText = d.status === 'available' ? 'Enquire about print / original' : 'Enquire about print';
+    enquireLink.classList.add('show');
   } else {
-    shopLink.classList.remove('show');
+    enquireLink.classList.remove('show');
   }
 }
 function closeInfo() {
   info.classList.remove('show');
-  document.getElementById('info-shop-link').classList.remove('show');
+  document.getElementById('info-enquire-link').classList.remove('show');
   selectedUserData = null;
 }
 

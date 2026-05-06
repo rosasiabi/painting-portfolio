@@ -25,76 +25,16 @@ const artworks = [
 const params = new URLSearchParams(window.location.search);
 const requestedSlug = params.get('artwork') || artworks[0].slug;
 const art = artworks.find((item) => item.slug === requestedSlug) || artworks[0];
-const paymentStatus = params.get('payment');
+const subject = art.status === 'available'
+  ? `Artwork enquiry: ${art.title} - print or original`
+  : `Artwork enquiry: ${art.title} - print`;
 
-const checkoutNote = document.getElementById('checkout-note');
-const fallbackNote = document.getElementById('fallback-note');
-const enquireLink = document.getElementById('enquire-link');
-
-document.title = `${art.title} | Siabi Studio Shop`;
+document.title = `${art.title} | Siabi Studio Enquiry`;
 document.getElementById('art-title').innerText = art.title;
 document.getElementById('art-size').innerText = art.size;
 document.getElementById('art-status').innerText = art.status;
 document.getElementById('art-medium').innerText = `${art.medium} / ${art.category}`;
+document.getElementById('art-format').innerText = art.status === 'available' ? 'Print or original enquiry' : 'Print enquiry';
 document.getElementById('art-image').src = `/images/${art.medium}/${art.fileName}`;
 document.getElementById('art-image').alt = art.title;
-enquireLink.href = `/contact.html?subject=${encodeURIComponent(`Purchase enquiry: ${art.title}`)}`;
-
-function setMessage(message, showFallback = false) {
-  checkoutNote.innerText = message;
-  fallbackNote.classList.toggle('show', showFallback);
-}
-
-function disableButton(button, label) {
-  button.href = '#';
-  button.innerText = label;
-  button.setAttribute('aria-disabled', 'true');
-  button.addEventListener('click', (event) => event.preventDefault());
-}
-
-function configureButton(id, format, label, disabledLabel) {
-  const button = document.getElementById(id);
-  if (format === 'original' && art.status !== 'available') {
-    disableButton(button, disabledLabel);
-    return;
-  }
-
-  button.href = '#';
-  button.innerText = label;
-  button.removeAttribute('aria-disabled');
-  button.addEventListener('click', async (event) => {
-    event.preventDefault();
-    button.setAttribute('aria-disabled', 'true');
-    const originalText = button.innerText;
-    button.innerText = 'Opening Stripe...';
-
-    try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        body: JSON.stringify({ artwork: art.slug, format })
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.url) {
-        throw new Error(payload.error || 'Stripe checkout could not start.');
-      }
-      window.location.assign(payload.url);
-    } catch (error) {
-      button.removeAttribute('aria-disabled');
-      button.innerText = originalText;
-      setMessage(error.message, true);
-    }
-  });
-}
-
-configureButton('buy-print', 'print', 'Buy print', 'Print checkout coming soon');
-configureButton('buy-original', 'original', 'Buy original', 'Original sold');
-
-if (paymentStatus === 'success') {
-  setMessage('Payment complete. Thank you for collecting this work.');
-} else if (paymentStatus === 'cancelled') {
-  setMessage('Checkout was cancelled. You can return to Stripe whenever you are ready.');
-}
+document.getElementById('enquire-artwork').href = `/contact.html?subject=${encodeURIComponent(subject)}`;
