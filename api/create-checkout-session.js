@@ -56,12 +56,29 @@ function getBaseUrl(request) {
   if (process.env.SITE_URL) return sanitizeBaseUrl(process.env.SITE_URL);
   if (process.env.VERCEL_URL) return sanitizeBaseUrl(`https://${process.env.VERCEL_URL}`);
 
+  const requestOrigin = getRequestOrigin(request);
+  if (requestOrigin) return requestOrigin;
+
+  return 'http://localhost:5173';
+}
+
+function getRequestOrigin(request) {
+  const host = request.headers.host || '';
+  const proto = request.headers['x-forwarded-proto'] || (host.includes('localhost') || host.startsWith('127.') ? 'http' : 'https');
+
+  if (/^[A-Za-z0-9.-]+(?::\d+)?$/.test(host) && ['http', 'https'].includes(proto)) {
+    return `${proto}://${host}`;
+  }
+
+  return '';
+}
+
+function getLocalDevOrigin(request) {
   const host = request.headers.host || '';
   if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) {
     return `http://${host}`;
   }
-
-  return 'http://localhost:5173';
+  return '';
 }
 
 function getBody(request) {
@@ -97,7 +114,21 @@ function isAllowedOrigin(request) {
   if (!origin) return true;
 
   try {
-    return new URL(origin).origin === getBaseUrl(request);
+    const browserOrigin = new URL(origin).origin;
+    const allowedOrigins = new Set([
+      getRequestOrigin(request),
+      getLocalDevOrigin(request)
+    ].filter(Boolean));
+
+    if (process.env.SITE_URL) {
+      allowedOrigins.add(sanitizeBaseUrl(process.env.SITE_URL));
+    }
+
+    if (process.env.VERCEL_URL) {
+      allowedOrigins.add(sanitizeBaseUrl(`https://${process.env.VERCEL_URL}`));
+    }
+
+    return allowedOrigins.has(browserOrigin);
   } catch {
     return false;
   }
@@ -185,7 +216,7 @@ export default async function handler(request, response) {
     return;
   }
 
-  const unitAmount = item[format];
+  const unitAmount = item[checkoutFormat];
   if (!Number.isInteger(unitAmount) || unitAmount <= 0) {
     sendJson(response, 409, { error: 'Checkout is not configured for this item yet.' });
     return;
