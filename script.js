@@ -245,9 +245,9 @@ sculpturesData.forEach((sdata, i) => {
 
 // ---- 8. LAZY TEXTURE + MODEL LOADER ---------------------------------------
 const LOAD_RADIUS_SQ = 60 * 60; // world units squared
-const DROP_HEIGHT = 6.2;
-const DROP_DURATION = 1150;
-const DROP_STAGGER_MS = 135;
+const DROP_HEIGHT = 4.8;
+const DROP_DURATION = 1400;
+const DROP_STAGGER_MS = 90;
 let textureQueue = [];
 let textureQueueIndex = 0;
 let textureQueueRunning = false;
@@ -314,7 +314,7 @@ function loadNextPaintingTexture() {
       applyFilters();
       revealAfterFirstPainting();
       updateLoadingProgress();
-      setTimeout(loadNextPaintingTexture, DROP_STAGGER_MS);
+      setTimeout(loadNextPaintingTexture, DROP_DURATION + DROP_STAGGER_MS);
     },
     undefined,
     () => {
@@ -326,7 +326,7 @@ function loadNextPaintingTexture() {
       applyFilters();
       revealAfterFirstPainting();
       updateLoadingProgress();
-      setTimeout(loadNextPaintingTexture, DROP_STAGGER_MS);
+      setTimeout(loadNextPaintingTexture, DROP_DURATION + DROP_STAGGER_MS);
     }
   );
 }
@@ -382,7 +382,7 @@ function updateDropAnimations(now) {
     }
 
     const t = Math.min((now - drop.start) / drop.duration, 1);
-    const fall = 1 - Math.pow(1 - t, 3);
+    const fall = t * t * t * (t * (t * 6 - 15) + 10);
     mesh.position.y = drop.fromY + (drop.targetY - drop.fromY) * fall;
 
     if (t === 1) {
