@@ -153,8 +153,8 @@ function findSpot(radius) {
   let attempts = 0;
   while (attempts < 600) {
     const k = placedItems.length + attempts * 0.3;
-    const r = 1.6 * Math.sqrt(k) + Math.random() * 0.8;
-    const a = k * 2 * Math.PI / (phi * phi) + (Math.random() - 0.5) * 0.3;
+    const r = 1.22 * Math.sqrt(k) + Math.random() * 0.45;
+    const a = k * 2 * Math.PI / (phi * phi) + (Math.random() - 0.5) * 0.24;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     let ok = true;
     for (const p of placedItems) {
@@ -163,7 +163,7 @@ function findSpot(radius) {
     if (ok) { placedItems.push({ x, z, radius }); return { x, z }; }
     attempts++;
   }
-  return { x: (Math.random() - .5) * 30, z: (Math.random() - .5) * 30 };
+  return { x: (Math.random() - .5) * 24, z: (Math.random() - .5) * 24 };
 }
 
 // ---- 6. PAINTINGS (geometry immediately, textures lazily) ------------------
@@ -174,7 +174,7 @@ const interactableObjects = [];
 
 paintingsData.forEach((data, idx) => {
   const dims = getDimensions(data.size, data.medium, data.orientation);
-  const radius = Math.hypot(dims.w, dims.h) / 2 + 0.7;
+  const radius = Math.hypot(dims.w, dims.h) / 2 + 0.28;
   const { x, z } = findSpot(radius);
 
   const geometry = new THREE.BoxGeometry(dims.w, dims.thickness, dims.h);
@@ -199,6 +199,7 @@ paintingsData.forEach((data, idx) => {
   mesh.rotation.y = (Math.random() - 0.5) * 0.9;
 
   data.imagePath = `/images/${data.medium}/${data.fileName}`;
+  data.shopPath = `/shop.html?artwork=${encodeURIComponent(data.fileName.replace(/\.[^.]+$/, ''))}`;
   data.index = idx + 1;
   data.faceMat = faceMat;
   data.loaded = false;
@@ -475,8 +476,20 @@ function openInfo(d) {
   statusEl.innerText = d.status;
   const hint = document.getElementById('info-hint');
   hint.innerText = d.imagePath ? 'Click again — enlarge →' : 'Sculpture — 3D work';
+  const shopLink = document.getElementById('info-shop-link');
+  if (d.imagePath && d.shopPath) {
+    shopLink.href = d.shopPath;
+    shopLink.innerText = d.status === 'available' ? 'Shop print / original' : 'Shop print';
+    shopLink.classList.add('show');
+  } else {
+    shopLink.classList.remove('show');
+  }
 }
-function closeInfo() { info.classList.remove('show'); selectedUserData = null; }
+function closeInfo() {
+  info.classList.remove('show');
+  document.getElementById('info-shop-link').classList.remove('show');
+  selectedUserData = null;
+}
 
 function openModal(d) {
   if (!d.imagePath) return; // sculptures don't have a 2D image

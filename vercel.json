@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/((?!assets|images|models).*)", "destination": "/index.html" }
+    { "source": "/shop", "destination": "/shop.html" }
   ]
 }

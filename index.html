@@ -150,6 +150,15 @@
   }
   #info-panel .status-tag.sold{ background: var(--ink); color: var(--paper); }
   #info-panel .status-tag.available{ border-color: var(--accent); color: var(--accent); }
+  #info-panel .shop-link{
+    display:none; width:100%; margin-top:14px; padding:11px 12px;
+    border:1px solid var(--ink); color: var(--paper); background: var(--ink);
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em;
+    text-transform:uppercase; text-align:center; text-decoration:none;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+  }
+  #info-panel .shop-link.show{ display:block; }
+  #info-panel .shop-link:hover{ background: var(--accent); border-color: var(--accent); color: var(--ink); }
   #info-panel .view-hint{ margin-top:14px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.22em; text-transform:uppercase; color: var(--muted); }
 
   /* ---------- FULL-SCREEN MODAL ---------- */
@@ -318,6 +327,7 @@
     <div><span>Cat.</span> <em id="info-category">—</em></div>
   </div>
   <div id="info-status" class="status-tag">—</div>
+  <a id="info-shop-link" class="shop-link" href="/shop.html">Shop print / original</a>
   <div class="view-hint" id="info-hint">Click again — enlarge →</div>
 </div>
 
