@@ -1,6 +1,10 @@
 const STRIPE_API_VERSION = '2026-04-22.dahlia';
 const DEFAULT_CURRENCY = 'gbp';
 const SHIPPING_COUNTRIES = ['AT', 'BE', 'CA', 'CH', 'DE', 'DK', 'ES', 'FI', 'FR', 'GB', 'IE', 'IT', 'NL', 'NO', 'PT', 'SE', 'US'];
+const MAX_BODY_BYTES = 1024;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 20;
+const rateLimitBuckets = new Map();
 
 const catalog = {
   charles: {
@@ -49,11 +53,14 @@ const catalog = {
 };
 
 function getBaseUrl(request) {
-  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '');
-  const host = request.headers['x-forwarded-host'] || request.headers.host;
-  const proto = request.headers['x-forwarded-proto'] || 'https';
-  if (host) return `${proto}://${host}`;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  if (process.env.SITE_URL) return sanitizeBaseUrl(process.env.SITE_URL);
+  if (process.env.VERCEL_URL) return sanitizeBaseUrl(`https://${process.env.VERCEL_URL}`);
+
+  const host = request.headers.host || '';
+  if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) {
+    return `http://${host}`;
+  }
+
   return 'http://localhost:5173';
 }
 
@@ -69,7 +76,54 @@ function getBody(request) {
   return {};
 }
 
+function sanitizeBaseUrl(value) {
+  const url = new URL(value);
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error('Invalid SITE_URL protocol.');
+  }
+  return url.origin;
+}
+
+function getClientIp(request) {
+  const forwardedFor = request.headers['x-forwarded-for'];
+  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  return request.socket?.remoteAddress || 'unknown';
+}
+
+function isAllowedOrigin(request) {
+  const origin = request.headers.origin;
+  if (!origin) return true;
+
+  try {
+    return new URL(origin).origin === getBaseUrl(request);
+  } catch {
+    return false;
+  }
+}
+
+function isRateLimited(request) {
+  const now = Date.now();
+  const ip = getClientIp(request);
+  const bucket = rateLimitBuckets.get(ip);
+
+  if (!bucket || bucket.resetAt <= now) {
+    rateLimitBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  bucket.count += 1;
+  return bucket.count > RATE_LIMIT_MAX_REQUESTS;
+}
+
+function setSecurityHeaders(response) {
+  response.setHeader('Cache-Control', 'no-store');
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+}
+
 function sendJson(response, status, payload) {
+  setSecurityHeaders(response);
   response.statusCode = status;
   response.setHeader('Content-Type', 'application/json');
   response.end(JSON.stringify(payload));
@@ -86,18 +140,42 @@ export default async function handler(request, response) {
     return;
   }
 
+  if (isRateLimited(request)) {
+    sendJson(response, 429, { error: 'Too many checkout attempts. Please wait a moment.' });
+    return;
+  }
+
+  const contentLength = Number(request.headers['content-length'] || 0);
+  if (contentLength > MAX_BODY_BYTES) {
+    sendJson(response, 413, { error: 'Request is too large.' });
+    return;
+  }
+
+  const contentType = request.headers['content-type'] || '';
+  if (contentType && !contentType.toLowerCase().includes('application/json')) {
+    sendJson(response, 415, { error: 'Expected a JSON request.' });
+    return;
+  }
+
+  if (!isAllowedOrigin(request)) {
+    sendJson(response, 403, { error: 'Checkout must start from this website.' });
+    return;
+  }
+
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
-    sendJson(response, 500, { error: 'Stripe is not configured yet.' });
+    sendJson(response, 503, { error: 'Checkout is not available yet.' });
     return;
   }
 
   const { artwork, format } = getBody(request);
-  const item = catalog[artwork];
-  const isOriginal = format === 'original';
-  const isPrint = format === 'print';
+  const artworkSlug = typeof artwork === 'string' ? artwork : '';
+  const checkoutFormat = typeof format === 'string' ? format : '';
+  const item = catalog[artworkSlug];
+  const isOriginal = checkoutFormat === 'original';
+  const isPrint = checkoutFormat === 'print';
 
-  if (!item || (!isPrint && !isOriginal)) {
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(artworkSlug) || !item || (!isPrint && !isOriginal)) {
     sendJson(response, 400, { error: 'Unknown artwork or format.' });
     return;
   }
@@ -113,17 +191,24 @@ export default async function handler(request, response) {
     return;
   }
 
-  const baseUrl = getBaseUrl(request);
-  const currency = (process.env.STRIPE_CURRENCY || DEFAULT_CURRENCY).toLowerCase();
+  let baseUrl;
+  try {
+    baseUrl = getBaseUrl(request);
+  } catch {
+    sendJson(response, 503, { error: 'Checkout is not configured correctly.' });
+    return;
+  }
+
+  const currency = DEFAULT_CURRENCY;
   const params = new URLSearchParams();
   const productName = `${item.title} - ${isOriginal ? 'Original' : 'Print'}`;
 
   params.append('mode', 'payment');
-  params.append('success_url', `${baseUrl}/shop.html?artwork=${encodeURIComponent(artwork)}&payment=success`);
-  params.append('cancel_url', `${baseUrl}/shop.html?artwork=${encodeURIComponent(artwork)}&payment=cancelled`);
-  params.append('client_reference_id', `${artwork}:${format}`);
-  params.append('metadata[artwork]', artwork);
-  params.append('metadata[format]', format);
+  params.append('success_url', `${baseUrl}/shop.html?artwork=${encodeURIComponent(artworkSlug)}&payment=success`);
+  params.append('cancel_url', `${baseUrl}/shop.html?artwork=${encodeURIComponent(artworkSlug)}&payment=cancelled`);
+  params.append('client_reference_id', `${artworkSlug}:${checkoutFormat}`);
+  params.append('metadata[artwork]', artworkSlug);
+  params.append('metadata[format]', checkoutFormat);
   params.append('shipping_address_collection[allowed_countries][]', SHIPPING_COUNTRIES[0]);
   SHIPPING_COUNTRIES.slice(1).forEach((country) => {
     params.append('shipping_address_collection[allowed_countries][]', country);
@@ -132,8 +217,8 @@ export default async function handler(request, response) {
   appendLineItem(params, '[price_data][currency]', currency);
   appendLineItem(params, '[price_data][unit_amount]', String(unitAmount));
   appendLineItem(params, '[price_data][product_data][name]', productName);
-  appendLineItem(params, '[price_data][product_data][metadata][artwork]', artwork);
-  appendLineItem(params, '[price_data][product_data][metadata][format]', format);
+  appendLineItem(params, '[price_data][product_data][metadata][artwork]', artworkSlug);
+  appendLineItem(params, '[price_data][product_data][metadata][format]', checkoutFormat);
 
   try {
     const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -148,9 +233,12 @@ export default async function handler(request, response) {
 
     const session = await stripeResponse.json();
     if (!stripeResponse.ok) {
-      sendJson(response, stripeResponse.status, {
-        error: session.error?.message || 'Stripe could not create a checkout session.'
+      console.error('Stripe checkout session failed', {
+        status: stripeResponse.status,
+        type: session.error?.type,
+        code: session.error?.code
       });
+      sendJson(response, 502, { error: 'Stripe checkout could not start.' });
       return;
     }
 
