@@ -1,39 +1,35 @@
 const STRIPE_API_VERSION = '2026-04-22.dahlia';
-const DEFAULT_CURRENCY = 'eur';
+const DEFAULT_CURRENCY = 'gbp';
 const SHIPPING_COUNTRIES = ['AT', 'BE', 'CA', 'CH', 'DE', 'DK', 'ES', 'FI', 'FR', 'GB', 'IE', 'IT', 'NL', 'NO', 'PT', 'SE', 'US'];
 
 const catalog = {
   charles: {
     title: 'I have meddled...If that is the word',
     status: 'available',
-    print: 7500,
+    print: 10000,
     original: 65000
   },
   charlie: {
     title: 'Charlie',
-    status: 'sold',
-    print: 7500
+    status: 'sold'
   },
   teni: {
     title: 'Teni',
-    status: 'sold',
-    print: 7500
+    status: 'sold'
   },
   milo: {
     title: 'Milo',
-    status: 'sold',
-    print: 7500
+    status: 'sold'
   },
   andrew: {
     title: 'Andrew',
-    status: 'sold',
-    print: 7500
+    status: 'sold'
   },
   victor: {
     title: 'I sport new balance to avoid a narrow path',
     status: 'available',
     print: 7500,
-    original: 120000
+    original: 20000
   },
   bb09: { title: 'head', status: 'available', print: 4500, original: 28000 },
   bb01: { title: 'leg', status: 'available', print: 4500, original: 28000 },
