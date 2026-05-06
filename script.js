@@ -284,18 +284,10 @@ function preparePaintingDrop(mesh) {
   const d = mesh.userData;
   const targetY = d.floorY || mesh.position.y;
   mesh.position.y = targetY + DROP_HEIGHT;
-  const targetRotationY = mesh.rotation.y;
-  const targetRotationZ = mesh.rotation.z;
-  mesh.rotation.y = targetRotationY + (Math.random() - 0.5) * 0.18;
-  mesh.rotation.z = targetRotationZ + (Math.random() - 0.5) * 0.08;
   d.drop = {
     start: performance.now(),
     fromY: mesh.position.y,
     targetY,
-    fromRotationY: mesh.rotation.y,
-    targetRotationY,
-    fromRotationZ: mesh.rotation.z,
-    targetRotationZ,
     duration: DROP_DURATION
   };
   activeDrops.push(mesh);
@@ -390,17 +382,11 @@ function updateDropAnimations(now) {
     }
 
     const t = Math.min((now - drop.start) / drop.duration, 1);
-    const fall = t < 0.82
-      ? 1 - Math.pow(1 - (t / 0.82), 4)
-      : 1;
+    const fall = 1 - Math.pow(1 - t, 3);
     mesh.position.y = drop.fromY + (drop.targetY - drop.fromY) * fall;
-    mesh.rotation.y = drop.fromRotationY + (drop.targetRotationY - drop.fromRotationY) * fall;
-    mesh.rotation.z = drop.fromRotationZ + (drop.targetRotationZ - drop.fromRotationZ) * fall;
 
     if (t === 1) {
       mesh.position.y = drop.targetY;
-      mesh.rotation.y = drop.targetRotationY;
-      mesh.rotation.z = drop.targetRotationZ;
       delete mesh.userData.drop;
       activeDrops.splice(i, 1);
     }
