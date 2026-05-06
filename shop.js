@@ -38,7 +38,7 @@ document.getElementById('art-status').innerText = art.status;
 document.getElementById('art-medium').innerText = `${art.medium} / ${art.category}`;
 document.getElementById('art-image').src = `/images/${art.medium}/${art.fileName}`;
 document.getElementById('art-image').alt = art.title;
-enquireLink.href = `mailto:rosa@siabi.studio?subject=${encodeURIComponent(`Purchase enquiry: ${art.title}`)}`;
+enquireLink.href = `/contact.html?subject=${encodeURIComponent(`Purchase enquiry: ${art.title}`)}`;
 
 function setMessage(message, showFallback = false) {
   checkoutNote.innerText = message;
