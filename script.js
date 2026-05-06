@@ -4,8 +4,6 @@
 //  Heavily optimized for fast first paint (see PERF notes throughout).
 // ============================================================================
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 // ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
@@ -133,8 +131,8 @@ scene.add(floor);
 // ---- 4. LOADING MANAGER ----------------------------------------------------
 // PERF: we only gate the loading screen on the SCENE BOOT, not every texture.
 // Textures stream in lazily afterward (see lazy loader below).
-const bootManager = new THREE.LoadingManager();
-const textureLoader = new THREE.TextureLoader();
+const lazyAssetManager = new THREE.LoadingManager();
+const textureLoader = new THREE.TextureLoader(lazyAssetManager);
 
 // Placeholder: a tiny procedural canvas texture. Instant. No network cost.
 function makePlaceholderTexture() {
@@ -244,7 +242,8 @@ sculpturesData.forEach((sdata, i) => {
 });
 
 // ---- 8. LAZY TEXTURE + MODEL LOADER ---------------------------------------
-const LOAD_RADIUS_SQ = 60 * 60; // world units squared
+const TEXTURE_LOAD_RADIUS_SQ = 18 * 18; // world units squared
+const MODEL_LOAD_RADIUS_SQ = 24 * 24;
 
 function cameraTargetXZ() {
   return { x: camera.position.x - 5, z: camera.position.z - 7 };
@@ -256,7 +255,7 @@ function maybeLoadTextures() {
     const d = mesh.userData;
     if (d.isSculpture || d.loaded || d.loading) continue;
     const dx = mesh.position.x - cx, dz = mesh.position.z - cz;
-    if (dx * dx + dz * dz < LOAD_RADIUS_SQ) {
+    if (dx * dx + dz * dz < TEXTURE_LOAD_RADIUS_SQ) {
       d.loading = true;
       textureLoader.load(
         d.imagePath, 
@@ -282,14 +281,14 @@ function maybeLoadTextures() {
   for (const s of sculptureEntries) {
     if (s.loaded || s.loading) continue;
     const dx = s.x - cx, dz = s.z - cz;
-    if (dx * dx + dz * dz < LOAD_RADIUS_SQ) {
+    if (dx * dx + dz * dz < MODEL_LOAD_RADIUS_SQ) {
       s.loading = true;
       loadSculpture(s);
     }
   }
 }
 
-function loadSculpture(s) {
+async function loadSculpture(s) {
   const { data } = s;
   const onMesh = (mesh) => {
     mesh.castShadow = true;
@@ -321,6 +320,7 @@ function loadSculpture(s) {
   };
 
   if (data.type === 'glb') {
+    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
     const loader = new GLTFLoader();
     loader.load(
       data.file, 
@@ -345,6 +345,7 @@ function loadSculpture(s) {
       }
     );
   } else {
+    const { STLLoader } = await import('three/examples/jsm/loaders/STLLoader.js');
     const loader = new STLLoader();
     loader.load(
       data.file, 
@@ -632,32 +633,24 @@ const pct = document.getElementById('loading-pct');
 const screen = document.getElementById('loading-screen');
 
 // Fallback in case nothing is in the immediate camera radius to trigger a load
-let fallbackLoader = setTimeout(() => {
+function dismissLoadingScreen() {
   screen.style.opacity = '0';
   setTimeout(() => {
     screen.style.display = 'none';
     document.body.classList.remove('loading');
   }, 700);
-}, 1500);
+}
 
-THREE.DefaultLoadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
-  clearTimeout(fallbackLoader); // Cancel fallback, real items are loading
-  const p = (itemsLoaded / itemsTotal) * 100;
-  bar.style.width = p + '%';
-  pct.innerText = String(Math.floor(p)).padStart(3, '0') + '%';
-};
-
-THREE.DefaultLoadingManager.onLoad = function () {
-  bar.style.width = '100%';
-  pct.innerText = '100%';
-  setTimeout(() => {
-    screen.style.opacity = '0';
-    setTimeout(() => {
-      screen.style.display = 'none';
-      document.body.classList.remove('loading');
-    }, 700);
-  }, 350); // tiny delay so the user registers the 100% mark
-};
+let loadingProgress = 0;
+const quickLoader = setInterval(() => {
+  loadingProgress = Math.min(loadingProgress + 18, 100);
+  bar.style.width = loadingProgress + '%';
+  pct.innerText = String(Math.floor(loadingProgress)).padStart(3, '0') + '%';
+  if (loadingProgress === 100) {
+    clearInterval(quickLoader);
+    setTimeout(dismissLoadingScreen, 180);
+  }
+}, 70);
 
 // Clock
 
