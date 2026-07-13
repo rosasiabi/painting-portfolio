@@ -14,7 +14,6 @@ export default {
         rollupOptions: {
             input: {
                 main: resolve(rootDir, 'index.html'),
-                shop: resolve(rootDir, 'shop.html'),
                 contact: resolve(rootDir, 'contact.html')
             }
         }

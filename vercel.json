@@ -48,7 +48,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/shop", "destination": "/shop.html" }
+    { "source": "/contact", "destination": "/contact.html" }
   ]
 }
