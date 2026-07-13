@@ -6,51 +6,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 const rateLimitBuckets = new Map();
 
-const catalog = {
-  charles: {
-    title: 'I have meddled...If that is the word',
-    status: 'available',
-    print: 10000,
-    original: 65000
-  },
-  charlie: {
-    title: 'Charlie',
-    status: 'sold'
-  },
-  teni: {
-    title: 'Teni',
-    status: 'sold'
-  },
-  milo: {
-    title: 'Milo',
-    status: 'sold'
-  },
-  andrew: {
-    title: 'Andrew',
-    status: 'sold'
-  },
-  victor: {
-    title: 'I sport new balance to avoid a narrow path',
-    status: 'available',
-    print: 7500,
-    original: 20000
-  },
-  bb09: { title: 'head', status: 'available', print: 4500, original: 28000 },
-  bb01: { title: 'leg', status: 'available', print: 4500, original: 28000 },
-  bb07: { title: 'nipple', status: 'sold', print: 4500 },
-  bb03: { title: 'half', status: 'available', print: 4500, original: 28000 },
-  bb04: { title: 'fist', status: 'available', print: 4500, original: 28000 },
-  bb05: { title: 'v', status: 'sold', print: 4500 },
-  bb02: { title: 'thigh', status: 'sold', print: 4500 },
-  bb06: { title: 'chest', status: 'available', print: 4500, original: 28000 },
-  bb08: { title: 'armpit', status: 'available', print: 4500, original: 28000 },
-  bb10: { title: 'upper body', status: 'available', print: 4500, original: 28000 },
-  CAKE: { title: 'Aging backwards', status: 'sold', print: 4500 },
-  MAKEUP: { title: 'All dolled up with nowhere to be', status: 'available', print: 5500, original: 36000 },
-  tilda: { title: 'Tilda do us part', status: 'available', print: 4500, original: 28000 },
-  franca: { title: 'Franca lost her drink', status: 'sold', print: 4500 },
-  tow: { title: 'Turkish Oil Wrestling', status: 'available', print: 4500, original: 28000 }
-};
+const catalog = {};
 
 function getBaseUrl(request) {
   if (process.env.SITE_URL) return sanitizeBaseUrl(process.env.SITE_URL);

@@ -204,15 +204,9 @@ paintingsData.forEach((data, idx) => {
   mesh.rotation.y = (Math.random() - 0.5) * 0.9;
 
   data.imagePath = `/images/${data.medium}/${data.fileName}`;
-  data.canEnquireOriginal = data.status === 'available';
-  data.canEnquirePrint = Boolean(data.printEdition && data.printEdition.available > 0);
-  if (data.canEnquireOriginal || data.canEnquirePrint) {
-    const formats = data.canEnquireOriginal && data.canEnquirePrint
-      ? `print edition ${data.printEdition.available}/${data.printEdition.total} or original`
-      : data.canEnquirePrint
-        ? `print edition ${data.printEdition.available}/${data.printEdition.total}`
-        : 'original';
-    data.enquiryPath = `/contact.html?subject=${encodeURIComponent(`Artwork enquiry: ${data.title} - ${formats}`)}`;
+  data.canEnquire = data.status === 'available';
+  if (data.canEnquire) {
+    data.enquiryPath = `/contact.html?subject=${encodeURIComponent(`Artwork enquiry: ${data.title} - original`)}`;
   }
   data.index = idx + 1;
   data.faceMat = faceMat;
@@ -556,7 +550,6 @@ function openInfo(d) {
   document.getElementById('info-medium').innerText = (d.medium || '').toUpperCase();
   document.getElementById('info-title').innerText = d.title;
   document.getElementById('info-size').innerText = d.size;
-  document.getElementById('info-edition').innerText = d.printEdition ? `${d.printEdition.available}/${d.printEdition.total}` : 'No prints';
   document.getElementById('info-category').innerText = d.category;
   const statusEl = document.getElementById('info-status');
   statusEl.className = 'status-tag ' + (d.status || '').replace(' ', '-');
@@ -564,13 +557,9 @@ function openInfo(d) {
   const hint = document.getElementById('info-hint');
   hint.innerText = d.imagePath ? 'Click again — enlarge →' : 'Sculpture — 3D work';
   const enquireLink = document.getElementById('info-enquire-link');
-  if (d.imagePath && d.enquiryPath) {
+  if (d.imagePath && d.canEnquire && d.enquiryPath) {
     enquireLink.href = d.enquiryPath;
-    enquireLink.innerText = d.canEnquireOriginal && d.canEnquirePrint
-      ? 'Enquire about print / original'
-      : d.canEnquirePrint
-        ? 'Enquire about print'
-        : 'Enquire about original';
+    enquireLink.innerText = 'Enquire about this work';
     enquireLink.classList.add('show');
   } else {
     enquireLink.classList.remove('show');
