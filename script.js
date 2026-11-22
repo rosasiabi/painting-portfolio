@@ -10,6 +10,10 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 // ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
 const paintingsData = [
+  {"fileName": "IMG_5308.webp", "title": "But after hearing the gunshots, many people yelled, get down, get down, which caused her to start twerking.Do you believe? Get down. She’s the only one that really understood what that meant.", "size": "70cm x 100cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "portrait"},
+  {"fileName": "IMG_5309.webp", "title": "Untitled", "size": "80cm x 60cm x1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "IMG_5310.webp", "title": "When in doubt act like God", "size": "70cm x 100cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "portrait"},
+  {"fileName": "IMG_5311.webp", "title": "I didn't know that was happening", "size": "80cm x 60cm x1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "IMG_5312.webp", "title": "Love is an amazing feeling", "size": "100cm x 100cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "square"},
   {"fileName": "IMG_5325.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "ai", "status": "available", "orientation": "portrait"},
   {"fileName": "IMG_5327.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "portrait"},
@@ -18,6 +22,7 @@ const paintingsData = [
   {"fileName": "IMG_5636.webp", "title": "Untitled", "size": "A4", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "IMG_5644.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "graphite on paper", "category": "hands", "status": "available", "orientation": "portrait"},
   {"fileName": "IMG_5649.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "graphite on paper", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "IMG_5650.webp", "title": "In Vermont we know a thing or two about the cold", "size": "25.3cm x 20.2cm x 2cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "IMG_5651.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "charlie.webp", "title": "Charlie", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
   {"fileName": "teni.webp", "title": "Teni", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
