@@ -10,33 +10,37 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 // ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
 const paintingsData = [
-  { fileName: "charles.webp", title: "I have meddled...If that is the word", size: "A2", medium: "paper", category: "misc", status: "available", orientation: "Landscape" },
-  { fileName: "bb09.webp", title: "head", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "charlie.webp", title: "Charlie", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-  { fileName: "bb02.webp", title: "thigh", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
-  { fileName: "bb06.webp", title: "chest", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "teni.webp", title: "Teni", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-   { fileName: "CAKE.webp", title: "Aging backwards", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
-  { fileName: "milo.webp", title: "Milo", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-  { fileName: "andrew.webp", title: "Andrew", size: "40cm x 50cm x1.8cm", medium: "canvas", category: "portraits", status: "sold", orientation: "portrait" },
-  { fileName: "victor.webp", title: "I sport new balance to avoid a narrow path", size: "40cm x 50cm", medium: "canvas", category: "misc", status: "available", orientation: "portrait" },
-  { fileName: "bb01.webp", title: "leg", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "bb07.webp", title: "nipple", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "landscape" },
-  { fileName: "bb03.webp", title: "half", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "bb04.webp", title: "fist", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "portrait" },
-  { fileName: "bb05.webp", title: "v", size: "A5", medium: "paper", category: "body builder", status: "sold", orientation: "portrait" },
-  { fileName: "bb08.webp", title: "armpit", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
-  { fileName: "bb10.webp", title: "upper body", size: "A5", medium: "paper", category: "body builder", status: "available", orientation: "landscape" },
-  { fileName: "MAKEUP.webp", title: "All dolled up with nowhere to be", size: "a4", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
-  { fileName: "tilda.webp", title: "Tilda do us part", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "portrait" },
-  { fileName: "franca.webp", title: "OH NO! Franca lost her drink", size: "A5", medium: "paper", category: "misc", status: "sold", orientation: "portrait" },
-  { fileName: "tow.webp", title: "Turkish Oil Wrestling", size: "A5", medium: "paper", category: "misc", status: "available", orientation: "landscape" }
+  {"fileName": "IMG_5312.webp", "title": "Love is an amazing feeling", "size": "100cm x 100cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "square"},
+  {"fileName": "IMG_5325.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "ai", "status": "available", "orientation": "portrait"},
+  {"fileName": "IMG_5327.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "portrait"},
+  {"fileName": "IMG_5328.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "IMG_5635.webp", "title": "Untitled", "size": "A4", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "landscape"},
+  {"fileName": "IMG_5636.webp", "title": "Untitled", "size": "A4", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "IMG_5644.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "graphite on paper", "category": "hands", "status": "available", "orientation": "portrait"},
+  {"fileName": "IMG_5649.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "graphite on paper", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "IMG_5651.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "charlie.webp", "title": "Charlie", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
+  {"fileName": "teni.webp", "title": "Teni", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
+  {"fileName": "milo.webp", "title": "Milo", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
+  {"fileName": "andrew.webp", "title": "Andrew", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
+  {"fileName": "bb09.webp", "title": "head", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
+  {"fileName": "bb01.webp", "title": "leg", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
+  {"fileName": "bb07.webp", "title": "nipple", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "sold", "orientation": "landscape"},
+  {"fileName": "bb03.webp", "title": "half", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
+  {"fileName": "bb04.webp", "title": "fist", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
+  {"fileName": "bb05.webp", "title": "v", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "sold", "orientation": "portrait"},
+  {"fileName": "bb02.webp", "title": "thigh", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "sold", "orientation": "portrait"},
+  {"fileName": "bb06.webp", "title": "chest", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
+  {"fileName": "bb08.webp", "title": "armpit", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "landscape"},
+  {"fileName": "bb10.webp", "title": "upper body", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "landscape"},
+  {"fileName": "CAKE.webp", "title": "Aging backwards", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "sold", "orientation": "portrait"},
+  {"fileName": "victor.webp", "title": "I sport new balance to avoid a narrow path", "size": "40cm x 50cm", "medium": "canvas", "description": "oil on canvas", "category": "misc", "status": "available", "orientation": "portrait"},
+  {"fileName": "MAKEUP.webp", "title": "All dolled up with nowhere to be", "size": "A4", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "portrait"},
+  {"fileName": "charles.webp", "title": "i have meddled... if that is the word", "size": "A2", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
+  {"fileName": "tilda.webp", "title": "Tilda do us part", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "portrait"},
+  {"fileName": "franca.webp", "title": "OH NO! Franca lost her drink", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "sold", "orientation": "portrait"},
+  {"fileName": "tow.webp", "title": "Turkish Oil Wrestling", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "landscape"}
 ];
-
-const noPrintEdition = new Set(['andrew.webp', 'charlie.webp', 'teni.webp', 'milo.webp']);
-paintingsData.forEach((data) => {
-  data.printEdition = noPrintEdition.has(data.fileName) ? null : { available: 20, total: 20 };
-});
 
 // Sculptures — loaded lazily when camera is near.
 const sculpturesData = [
@@ -46,16 +50,18 @@ const sculpturesData = [
 ];
 
 function getDimensions(sizeStr, medium, orientation) {
-  let w = 4.0, h = 5.0, thickness = 0.18;
+  let w = 4.0, h = 5.0;
   const s = sizeStr.toLowerCase().replace(/\s/g, '');
+  const cm = s.match(/[\d.]+(?=cm)/g) || [];
   if (s.includes("a5")) { w = 1.48; h = 2.1; }
   else if (s.includes("a4")) { w = 2.1; h = 2.97; }
   else if (s.includes("a2")) { w = 5.94; h = 4.2; }
-  else if (s.includes("40cmx50cm")) { w = 4.0; h = 5.0; }
-  if (orientation === "landscape") { [w, h] = [h, w]; }
-  
-  // Bump the canvas thickness from 0.18 to 0.35 so it's visible in orthographic
-  thickness = (medium === "paper") ? 0.02 : 0.35; 
+  else if (cm.length >= 2) { w = parseFloat(cm[0]) / 10; h = parseFloat(cm[1]) / 10; }
+  if (orientation === "landscape" && h > w) { [w, h] = [h, w]; }
+
+  // Works whose size has a depth (e.g. "40cm x 50cm x 1.8cm") are built as a
+  // block; everything else lies flat like a sheet of paper.
+  const thickness = cm.length >= 3 ? 0.35 : 0.02;
   return { w, h, thickness };
 }
 
@@ -547,7 +553,7 @@ function openInfo(d) {
   selectedUserData = d;
   info.classList.add('show');
   document.getElementById('info-index').innerText = 'Nº ' + String(d.index).padStart(2, '0');
-  document.getElementById('info-medium').innerText = (d.medium || '').toUpperCase();
+  document.getElementById('info-medium').innerText = (d.description || d.medium || '').toUpperCase();
   document.getElementById('info-title').innerText = d.title;
   document.getElementById('info-size').innerText = d.size;
   document.getElementById('info-category').innerText = d.category;
@@ -581,7 +587,7 @@ function openModal(d) {
   const token = ++modalToken;
   modalImg.src = d.imagePath;
   document.getElementById('modal-title').innerText = d.title;
-  document.getElementById('modal-size').innerText = d.size + ' · ' + d.medium;
+  document.getElementById('modal-size').innerText = d.size + ' · ' + (d.description || d.medium);
   modal.classList.add('show');
   const hi = new Image();
   hi.onload = () => { if (token === modalToken) modalImg.src = hi.src; };

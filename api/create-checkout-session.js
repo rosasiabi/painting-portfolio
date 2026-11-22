@@ -160,9 +160,8 @@ export default async function handler(request, response) {
   const checkoutFormat = typeof format === 'string' ? format : '';
   const item = catalog[artworkSlug];
   const isOriginal = checkoutFormat === 'original';
-  const isPrint = checkoutFormat === 'print';
 
-  if (!/^[A-Za-z0-9_-]{1,40}$/.test(artworkSlug) || !item || (!isPrint && !isOriginal)) {
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(artworkSlug) || !item || !isOriginal) {
     sendJson(response, 400, { error: 'Unknown artwork or format.' });
     return;
   }
@@ -188,7 +187,7 @@ export default async function handler(request, response) {
 
   const currency = DEFAULT_CURRENCY;
   const params = new URLSearchParams();
-  const productName = `${item.title} - ${isOriginal ? 'Original' : 'Print'}`;
+  const productName = `${item.title} - Original`;
 
   params.append('mode', 'payment');
   params.append('success_url', `${baseUrl}/shop.html?artwork=${encodeURIComponent(artworkSlug)}&payment=success`);
