@@ -571,14 +571,23 @@ function closeInfo() {
   selectedUserData = null;
 }
 
+// The gallery uses small, fast images. The enlarge view opens on that same image
+// (already loaded, so it appears instantly), then swaps in the sharper large
+// version from /images/large/ as soon as it has downloaded.
+let modalToken = 0;
+function largePath(p) { return p.replace(/^\/images\//, '/images/large/'); }
 function openModal(d) {
   if (!d.imagePath) return; // sculptures don't have a 2D image
+  const token = ++modalToken;
   modalImg.src = d.imagePath;
   document.getElementById('modal-title').innerText = d.title;
   document.getElementById('modal-size').innerText = d.size + ' · ' + d.medium;
   modal.classList.add('show');
+  const hi = new Image();
+  hi.onload = () => { if (token === modalToken) modalImg.src = hi.src; };
+  hi.src = largePath(d.imagePath);
 }
-function closeModal() { modal.classList.remove('show'); modalImg.src = ''; }
+function closeModal() { modalToken++; modal.classList.remove('show'); modalImg.src = ''; }
 
 renderer.domElement.addEventListener('click', (e) => {
   if (didDrag) return; // ignore clicks that were really drags
