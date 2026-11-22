@@ -59,6 +59,12 @@ function getDimensions(sizeStr, medium, orientation) {
   else if (cm.length >= 2) { w = parseFloat(cm[0]) / 10; h = parseFloat(cm[1]) / 10; }
   if (orientation === "landscape" && h > w) { [w, h] = [h, w]; }
 
+  // Keep big works in proportion but no larger than an A2 sheet on screen,
+  // so one large canvas doesn't cover the rest of the gallery.
+  const MAX_SIDE = 5.94;
+  const longest = Math.max(w, h);
+  if (longest > MAX_SIDE) { w *= MAX_SIDE / longest; h *= MAX_SIDE / longest; }
+
   // Works whose size has a depth (e.g. "40cm x 50cm x 1.8cm") are built as a
   // block; everything else lies flat like a sheet of paper.
   const thickness = cm.length >= 3 ? 0.35 : 0.02;
