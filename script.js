@@ -1,13 +1,10 @@
 // ============================================================================
 //  ROSA — STUDIO INDEX
-//  Editorial 3D gallery. Paintings + sculptures scattered on a studio floor.
+//  Editorial 3D gallery. Paintings laid out on a studio floor, grouped by series.
 //  Heavily optimized for fast first paint (see PERF notes throughout).
 // ============================================================================
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
-// ... the rest of your paintingsData and code follows ...
 // ---- 1. DATA ---------------------------------------------------------------
 const paintingsData = [
   {"fileName": "IMG_5308.webp", "title": "But after hearing the gunshots, many people yelled, get down, get down, which caused her to start twerking.Do you believe? Get down. She’s the only one that really understood what that meant.", "size": "70cm x 100cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "portrait"},
@@ -24,10 +21,6 @@ const paintingsData = [
   {"fileName": "IMG_5649.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "graphite on paper", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "IMG_5650.webp", "title": "In Vermont we know a thing or two about the cold", "size": "25.3cm x 20.2cm x 2cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "IMG_5651.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
-  {"fileName": "charlie.webp", "title": "Charlie", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
-  {"fileName": "teni.webp", "title": "Teni", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
-  {"fileName": "milo.webp", "title": "Milo", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
-  {"fileName": "andrew.webp", "title": "Andrew", "size": "40cm x 50cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "portraits", "status": "sold", "orientation": "portrait"},
   {"fileName": "bb09.webp", "title": "head", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
   {"fileName": "bb01.webp", "title": "leg", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "available", "orientation": "portrait"},
   {"fileName": "bb07.webp", "title": "nipple", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "body builder", "status": "sold", "orientation": "landscape"},
@@ -42,16 +35,9 @@ const paintingsData = [
   {"fileName": "victor.webp", "title": "I sport new balance to avoid a narrow path", "size": "40cm x 50cm", "medium": "canvas", "description": "oil on canvas", "category": "misc", "status": "available", "orientation": "portrait"},
   {"fileName": "MAKEUP.webp", "title": "All dolled up with nowhere to be", "size": "A4", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "portrait"},
   {"fileName": "charles.webp", "title": "i have meddled... if that is the word", "size": "A2", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
-  {"fileName": "tilda.webp", "title": "Tilda do us part", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "portrait"},
+  {"fileName": "tilda.webp", "title": "Tilda do us part", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "portrait"},
   {"fileName": "franca.webp", "title": "OH NO! Franca lost her drink", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "sold", "orientation": "portrait"},
   {"fileName": "tow.webp", "title": "Turkish Oil Wrestling", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "misc", "status": "available", "orientation": "landscape"}
-];
-
-// Sculptures — loaded lazily when camera is near.
-const sculpturesData = [
-  { file: "models/3d_model_for_usb.glb", type: "glb", title: "USB — object study", size: "∼ 6cm", medium: "sculpture", category: "object", status: "available", scale: 6, color: 0xc96a3d },
-  { file: "models/WINDCATCHER.stl",      type: "stl", title: "Windcatcher",        size: "∼ 24cm", medium: "sculpture", category: "object", status: "available", scale: 0.14, color: 0x1a1a1a },
-  { file: "models/TP.stl",               type: "stl", title: "TP",                 size: "∼ 18cm", medium: "sculpture", category: "object", status: "in progress", scale: 0.12, color: 0xe8e4dc }
 ];
 
 function getDimensions(sizeStr, medium, orientation) {
@@ -64,11 +50,7 @@ function getDimensions(sizeStr, medium, orientation) {
   else if (cm.length >= 2) { w = parseFloat(cm[0]) / 10; h = parseFloat(cm[1]) / 10; }
   if (orientation === "landscape" && h > w) { [w, h] = [h, w]; }
 
-  // Keep big works in proportion but no larger than an A2 sheet on screen,
-  // so one large canvas doesn't cover the rest of the gallery.
-  const MAX_SIDE = 5.94;
-  const longest = Math.max(w, h);
-  if (longest > MAX_SIDE) { w *= MAX_SIDE / longest; h *= MAX_SIDE / longest; }
+  // Every work is shown to scale: 1 floor unit = 10cm.
 
   // Works whose size has a depth (e.g. "40cm x 50cm x 1.8cm") are built as a
   // block; everything else lies flat like a sheet of paper.
@@ -115,7 +97,7 @@ scene.add(new THREE.AmbientLight(0xfaf5ec, 0.95)); // brighter base so nothing e
 const keyLight = new THREE.DirectionalLight(0xfff2dc, 0.85);
 keyLight.position.set(18, 35, 12);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.mapSize.set(1024, 1024);
 // Wide frustum — covers the full scatter radius so far-flung paintings still receive light + shadow.
 keyLight.shadow.camera.left = -80;
 keyLight.shadow.camera.right = 80;
@@ -166,43 +148,165 @@ function makePlaceholderTexture() {
 }
 const placeholderTex = makePlaceholderTexture();
 
-// ---- 5. PLACEMENT (golden-angle phyllotaxis — organic, never overlapping) --
-const placedItems = [];
-function findSpot(radius) {
-  // Start from a golden-angle spiral then jitter. Far more organic than random.
-  const phi = (1 + Math.sqrt(5)) / 2;
-  let attempts = 0;
-  while (attempts < 600) {
-    const k = placedItems.length + attempts * 0.3;
-    const r = 1.22 * Math.sqrt(k) + Math.random() * 0.45;
-    const a = k * 2 * Math.PI / (phi * phi) + (Math.random() - 0.5) * 0.24;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    let ok = true;
-    for (const p of placedItems) {
-      if ((x - p.x) ** 2 + (z - p.z) ** 2 < (radius + p.radius) ** 2) { ok = false; break; }
-    }
-    if (ok) { placedItems.push({ x, z, radius }); return { x, z }; }
-    attempts++;
+// ---- 5. PLACEMENT (hands in the middle, everything else around, no overlaps)
+// The hands series is packed into the middle and the other series are mixed
+// together around it. Works are
+// tested as real rotated rectangles (not circles), so there are no big gaps,
+// and nothing is ever placed without an overlap check.
+// The layout is seeded, so it looks the same on every visit.
+function seededRandom(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rand = seededRandom(20261122);
+
+const FOCUS_GAP = 0.25; // space between hands works (kept close in the middle)
+const ITEM_GAP  = 0.45; // space around every other work (a looser scatter)
+const FOCUS_SERIES = 'hands'; // this series sits in the middle of the floor
+const MAX_TILT  = 0.36; // radians of random turn per work
+
+// Work out which floor directions show up as screen-right and screen-up for
+// this camera, so clusters grow in the shape of the screen (wide on desktop,
+// tall on phones).
+const screenToFloor = (() => {
+  camera.updateMatrixWorld();
+  const px = window.innerWidth / 2, py = window.innerHeight / 2; // NDC → pixels
+  const o = new THREE.Vector3(0, 0, 0).project(camera);
+  const ex = new THREE.Vector3(1, 0, 0).project(camera);
+  const ez = new THREE.Vector3(0, 0, 1).project(camera);
+  // Screen pixels moved per floor unit along x and along z.
+  const a = (ex.x - o.x) * px, b = (ez.x - o.x) * px;
+  const c = (ex.y - o.y) * py, d2 = (ez.y - o.y) * py;
+  const det = a * d2 - b * c;
+  // Inverse: screen offset (sx, sy) → floor offset (x, z).
+  return (sx, sy) => [(d2 * sx - b * sy) / det, (-c * sx + a * sy) / det];
+})();
+// Usable area: the logo and links take some height, and on wider screens the
+// filter menu takes a strip on the left (mirrored on the right to stay centred).
+const usableWidth = window.innerWidth > 720 ? 1 - (2 * 230) / window.innerWidth : 0.94;
+const screenAspect = Math.sqrt((usableWidth * window.innerWidth) / (0.72 * window.innerHeight));
+const floorPerPixel = Math.hypot(...screenToFloor(1, 0)); // floor units per screen pixel, horizontally
+
+function rectCorners(x, z, w, h, rot) {
+  const c = Math.cos(rot), s = Math.sin(rot), hw = w / 2, hh = h / 2;
+  return [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]
+    .map(([u, v]) => [x + u * c + v * s, z - u * s + v * c]);
+}
+function bounds(poly) {
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const [x, z] of poly) {
+    if (x < minX) minX = x; if (x > maxX) maxX = x;
+    if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
   }
-  return { x: (Math.random() - .5) * 24, z: (Math.random() - .5) * 24 };
+  return { minX, maxX, minZ, maxZ };
+}
+// Separating-axis test for two rotated rectangles, with a minimum gap.
+function rectsTooClose(A, B, gap) {
+  const ba = A.box, bb = B.box;
+  if (ba.maxX + gap <= bb.minX || bb.maxX + gap <= ba.minX ||
+      ba.maxZ + gap <= bb.minZ || bb.maxZ + gap <= ba.minZ) return false;
+  for (const P of [A.poly, B.poly]) {
+    for (let i = 0; i < 2; i++) {
+      let ax = -(P[i + 1][1] - P[i][1]), az = P[i + 1][0] - P[i][0];
+      const len = Math.hypot(ax, az); ax /= len; az /= len;
+      let aMin = Infinity, aMax = -Infinity, bMin = Infinity, bMax = -Infinity;
+      for (const [x, z] of A.poly) { const p = x * ax + z * az; if (p < aMin) aMin = p; if (p > aMax) aMax = p; }
+      for (const [x, z] of B.poly) { const p = x * ax + z * az; if (p < bMin) bMin = p; if (p > bMax) bMax = p; }
+      if (aMax + gap <= bMin || bMax + gap <= aMin) return false;
+    }
+  }
+  return true;
+}
+function shape(poly) { return { poly, box: bounds(poly) }; }
+function moved(s, dx, dz) { return shape(s.poly.map(([x, z]) => [x + dx, z + dz])); }
+
+// Candidate offsets on growing rings, shaped like the screen. Closest first.
+function* ringOffsets(step, aspect) {
+  yield [0, 0];
+  for (let r = step; r < 80; r += step) {
+    const n = Math.ceil((2 * Math.PI * r) / step);
+    const start = rand() * Math.PI * 2;
+    for (let i = 0; i < n; i++) {
+      const a = start + (i * 2 * Math.PI) / n;
+      // r is roughly in floor units; scale so the ring is that size on screen.
+      const [x, z] = screenToFloor(Math.cos(a) * aspect, Math.sin(a) / aspect);
+      const k = r / floorPerPixel;
+      yield [x * k, z * k];
+    }
+  }
+}
+// Find the closest offset where every shape in `group` clears every shape in `placed`.
+function placeGroup(group, placed, gap, step, aspect) {
+  for (const [dx, dz] of ringOffsets(step, aspect)) {
+    const movedGroup = group.map(s => moved(s, dx, dz));
+    const clash = movedGroup.some(g => placed.some(p => rectsTooClose(g, p, gap)));
+    if (!clash) return { dx, dz, shapes: movedGroup };
+  }
+  throw new Error('Could not place group');
 }
 
-// ---- 6. PAINTINGS (geometry immediately, textures lazily) ------------------
+function layoutPaintings(items) {
+  // One blended scatter: the focus series (hands) is packed first so it takes
+  // the middle, then every other work, mixed together, is placed around it.
+  const area = it => it.dims.w * it.dims.h;
+  const focus = items.filter(it => it.category === FOCUS_SERIES).sort((a, b) => area(b) - area(a));
+  const rest = items.filter(it => it.category !== FOCUS_SERIES);
+  for (let i = rest.length - 1; i > 0; i--) { // seeded shuffle so the series blend
+    const j = Math.floor(rand() * (i + 1));
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+
+  const placed = [];
+  for (const [list, gap] of [[focus, FOCUS_GAP], [rest, ITEM_GAP]]) {
+    for (const it of list) {
+      it.rot = (rand() - 0.5) * MAX_TILT;
+      const s = shape(rectCorners(0, 0, it.dims.w, it.dims.h, it.rot));
+      // Every work is checked against every work already placed: no overlaps.
+      const spot = placeGroup([s], placed, gap, 0.12, screenAspect);
+      it.x = spot.dx; it.z = spot.dz;
+      placed.push(spot.shapes[0]);
+    }
+  }
+
+  // Centre everything on the floor origin.
+  const all = bounds(placed.flatMap(s => s.poly));
+  const cx = (all.minX + all.maxX) / 2, cz = (all.minZ + all.maxZ) / 2;
+  for (const it of items) { it.x -= cx; it.z -= cz; }
+  return placed.flatMap(s => s.poly).map(([x, z]) => [x - cx, z - cz]);
+}
+
+// ---- 6. PAINTINGS (geometry immediately, textures streamed in) ------------
 // The edges remain Standard so they catch light and show physical depth
 const sharedEdgeMaterial = new THREE.MeshStandardMaterial({ color: 0xd2c7b5, roughness: 0.9 });
 const paintingMeshes = [];
 const interactableObjects = [];
 
-paintingsData.forEach((data, idx) => {
-  const dims = getDimensions(data.size, data.medium, data.orientation);
-  const radius = Math.hypot(dims.w, dims.h) / 2 + 0.28;
-  const { x, z } = findSpot(radius);
+const layoutItems = paintingsData.map(data => ({
+  data, category: data.category,
+  dims: getDimensions(data.size, data.medium, data.orientation)
+}));
+const layoutCorners = layoutPaintings(layoutItems);
 
+// Local testing only: warn if any two works ever touch.
+if (import.meta.env && import.meta.env.DEV) {
+  const rects = [];
+  for (let i = 0; i < layoutCorners.length; i += 4) rects.push(shape(layoutCorners.slice(i, i + 4)));
+  let clashes = 0;
+  for (let i = 0; i < rects.length; i++)
+    for (let j = i + 1; j < rects.length; j++) if (rectsTooClose(rects[i], rects[j], 0)) clashes++;
+  console.info(`[layout] ${rects.length} works, ${clashes} overlapping pairs`);
+}
+
+layoutItems.forEach(({ data, dims, x, z, rot }, idx) => {
   const geometry = new THREE.BoxGeometry(dims.w, dims.thickness, dims.h);
 
   // The front face goes back to Basic so the artwork's colors are purely neutral
   const faceMat = new THREE.MeshBasicMaterial({ map: placeholderTex });
-  
+
   // We mix the materials: Basic for the top (the art), Standard for the sides (the canvas edge)
   const mats = [
     sharedEdgeMaterial, // right
@@ -218,9 +322,11 @@ paintingsData.forEach((data, idx) => {
   mesh.receiveShadow = true;
   data.floorY = dims.thickness / 2 + 0.001;
   mesh.position.set(x, data.floorY, z);
-  mesh.rotation.y = (Math.random() - 0.5) * 0.9;
+  mesh.rotation.y = rot;
 
   data.imagePath = `/images/${data.medium}/${data.fileName}`;
+  // Small version for the floor; falls back to the normal image if it's missing.
+  data.thumbPath = `/images/thumb/${data.medium}/${data.fileName}`;
   data.canEnquire = data.status === 'available';
   if (data.canEnquire) {
     data.enquiryPath = `/contact.html?subject=${encodeURIComponent(`Artwork enquiry: ${data.title} - original`)}`;
@@ -230,37 +336,66 @@ paintingsData.forEach((data, idx) => {
   data.loaded = false;
   mesh.userData = data;
 
-  mesh.visible = false; 
+  mesh.visible = false;
   scene.add(mesh);
   paintingMeshes.push(mesh);
   interactableObjects.push(mesh);
 });
 
-// ---- 7. SCULPTURES (lazy — nothing loads until camera gets near) -----------
-const sculptureEntries = [];
-sculpturesData.forEach((sdata, i) => {
-  const radius = 1.6;
-  const { x, z } = findSpot(radius);
-
-  // We deleted the plinth. Just store the location data so the lazy loader
-  // knows where to place the 3D model when it comes into view.
-  sculptureEntries.push({ 
-    data: sdata, 
-    x, 
-    z, 
-    loaded: false, 
-    loading: false, 
-    mesh: null 
-  });
-});
-
-// ---- 8. TEXTURE + MODEL LOADER --------------------------------------------
-const LOAD_RADIUS_SQ = 60 * 60; // world units squared
-let paintingTexturesLoaded = 0;
-
-function cameraTargetXZ() {
-  return { x: camera.position.x - 5, z: camera.position.z - 7 };
+// Fit the shadow area to the layout (smaller area = sharper, cheaper shadows).
+{
+  const b = bounds(layoutCorners);
+  const half = Math.max(b.maxX - b.minX, b.maxZ - b.minZ) / 2 + 6;
+  Object.assign(keyLight.shadow.camera, { left: -half, right: half, top: half, bottom: -half });
+  keyLight.shadow.camera.updateProjectionMatrix();
 }
+
+// Start zoomed so the whole collection fills the screen (leaving room for the
+// logo at the top and the links at the bottom).
+let minZoom = 0.4;
+const HERO_WIDTH  = 0.85; // starting view: centre hands work fills this much of the screen width…
+const HERO_HEIGHT = 0.55; // …or this much of the height, whichever is reached first
+function fitCameraToLayout() {
+  camera.zoom = 1;
+  camera.updateProjectionMatrix();
+  camera.updateMatrixWorld();
+  let maxX = 0, maxY = 0;
+  const v = new THREE.Vector3();
+  for (const [x, z] of layoutCorners) {
+    v.set(x, 0, z).project(camera);
+    maxX = Math.max(maxX, Math.abs(v.x));
+    maxY = Math.max(maxY, Math.abs(v.y));
+  }
+  const fitZoom = Math.max(0.15, Math.min(usableWidth / maxX, 0.68 / maxY, 5.0));
+  minZoom = Math.min(0.4, fitZoom); // people can always zoom out to see everything
+
+  // Start close in, centred on the biggest hands work, which fills most of the
+  // screen width on a phone (or a bit over half the height on wide screens).
+  const area = it => it.dims.w * it.dims.h;
+  const hero = layoutItems
+    .filter(it => it.category === FOCUS_SERIES)
+    .reduce((best, it) => (!best || area(it) > area(best) ? it : best), null);
+  if (!hero) { camera.zoom = cameraTarget.zoom = fitZoom; camera.updateProjectionMatrix(); return; }
+  camera.position.x = cameraTarget.x = camera.position.x + hero.x;
+  camera.position.z = cameraTarget.z = camera.position.z + hero.z;
+  camera.updateMatrixWorld();
+  let minX = Infinity, maxX2 = -Infinity, minY = Infinity, maxY2 = -Infinity;
+  for (const [x, z] of rectCorners(hero.x, hero.z, hero.dims.w, hero.dims.h, hero.rot)) {
+    v.set(x, 0, z).project(camera);
+    minX = Math.min(minX, v.x); maxX2 = Math.max(maxX2, v.x);
+    minY = Math.min(minY, v.y); maxY2 = Math.max(maxY2, v.y);
+  }
+  // NDC runs -1..1, so a span of 2 is the full screen.
+  const zoom = Math.max(minZoom, Math.min(
+    (HERO_WIDTH * 2) / (maxX2 - minX), (HERO_HEIGHT * 2) / (maxY2 - minY), 5.0));
+  camera.zoom = cameraTarget.zoom = zoom;
+  camera.updateProjectionMatrix();
+}
+fitCameraToLayout();
+
+// ---- 8. TEXTURE LOADER -----------------------------------------------------
+let paintingTexturesLoaded = 0;
+let loadingDismissed = false;
 
 function updateLoadingProgress() {
   if (!bar || !pct || !paintingMeshes.length) return;
@@ -275,11 +410,18 @@ function finishPaintingTexture(mesh) {
   d.loading = false;
   paintingTexturesLoaded++;
   updateLoadingProgress();
+  applyFilters(); // each work appears as soon as its image arrives
 
   if (paintingTexturesLoaded === paintingMeshes.length) {
-    applyFilters();
-    setTimeout(dismissLoadingScreen, 250);
+    setTimeout(dismissLoadingScreen, 150);
   }
+}
+
+function applyTexture(d, tex) {
+  tex.encoding = THREE.sRGBEncoding;
+  tex.anisotropy = 4;
+  d.faceMat.map = tex;
+  d.faceMat.needsUpdate = true;
 }
 
 function loadAllPaintingTextures() {
@@ -290,162 +432,21 @@ function loadAllPaintingTextures() {
     if (d.loading || d.loaded) return;
     d.loading = true;
 
-  textureLoader.load(
-    d.imagePath,
-    (tex) => {
-      tex.encoding = THREE.sRGBEncoding;
-      tex.anisotropy = 4;
-      d.faceMat.map = tex;
-      d.faceMat.needsUpdate = true;
-      finishPaintingTexture(mesh);
-    },
-    undefined,
-    () => {
-      console.error(`Failed to load texture: ${d.imagePath}`);
-      finishPaintingTexture(mesh);
-    }
-  );
-  });
-}
-
-function maybeLoadSculptures() {
-  const { x: cx, z: cz } = cameraTargetXZ();
-  /*
-  for (const mesh of paintingMeshes) {
-    const d = mesh.userData;
-    if (d.isSculpture || d.loaded || d.loading) continue;
-    const dx = mesh.position.x - cx, dz = mesh.position.z - cz;
-    if (dx * dx + dz * dz < LOAD_RADIUS_SQ) {
-      d.loading = true;
-      textureLoader.load(
-        d.imagePath, 
-        (tex) => { // SUCCESS
-          tex.encoding = THREE.sRGBEncoding;
-          tex.anisotropy = 4;
-          d.faceMat.map = tex;
-          d.faceMat.needsUpdate = true;
-          d.loaded = true;
-          applyFilters(); 
-        }, 
-        undefined, 
-        (err) => { // ERROR
-          console.error(`🚨 Failed to load texture: ${d.imagePath}`);
-          d.loading = false;
-          d.loaded = true; // Force it to be considered "loaded" so it unhides the placeholder
-          applyFilters();
+    textureLoader.load(
+      d.thumbPath,
+      (tex) => { applyTexture(d, tex); finishPaintingTexture(mesh); },
+      undefined,
+      () => textureLoader.load(
+        d.imagePath,
+        (tex) => { applyTexture(d, tex); finishPaintingTexture(mesh); },
+        undefined,
+        () => {
+          console.error(`Failed to load texture: ${d.imagePath}`);
+          finishPaintingTexture(mesh);
         }
-      );
-    }
-  }
-  
-  */
-  for (const s of sculptureEntries) {
-    if (s.loaded || s.loading) continue;
-    const dx = s.x - cx, dz = s.z - cz;
-    if (dx * dx + dz * dz < LOAD_RADIUS_SQ) {
-      s.loading = true;
-      loadSculpture(s);
-    }
-  }
-}
-
-/*
-function updateDropAnimations(now) {
-  for (let i = activeDrops.length - 1; i >= 0; i--) {
-    const mesh = activeDrops[i];
-    const drop = mesh.userData.drop;
-    if (!drop) {
-      activeDrops.splice(i, 1);
-      continue;
-    }
-
-    const t = Math.min((now - drop.start) / drop.duration, 1);
-    const fall = t * t * t * (t * (t * 6 - 15) + 10);
-    mesh.position.y = drop.fromY + (drop.targetY - drop.fromY) * fall;
-
-    if (t === 1) {
-      mesh.position.y = drop.targetY;
-      delete mesh.userData.drop;
-      activeDrops.splice(i, 1);
-    }
-  }
-}
-*/
-
-function loadSculpture(s) {
-  const { data } = s;
-  const onMesh = (mesh) => {
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-
-    const box = new THREE.Box3().setFromObject(mesh);
-    const size = new THREE.Vector3(); box.getSize(size);
-    const center = new THREE.Vector3(); box.getCenter(center);
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const targetSize = 1.1;
-    const k = targetSize / maxDim;
-    mesh.scale.multiplyScalar(k);
-    // Rest directly on the floor (Y = 0) instead of the plinth
-    mesh.position.set(
-      s.x - center.x * k,
-      (size.y * k) / 2 - (box.min.y * k) - (center.y * k) + 0.02,
-      s.z - center.z * k
+      )
     );
-    mesh.rotation.y = (Math.random() - 0.5) * Math.PI;
-
-    mesh.userData = { ...data, imagePath: null, index: 900, isSculpture: true };
-    mesh.traverse(o => { if (o.isMesh) o.userData = mesh.userData; });
-
-    scene.add(mesh);
-    interactableObjects.push(mesh);
-    s.mesh = mesh;
-    s.loaded = true;
-    applyFilters(); 
-  };
-
-  if (data.type === 'glb') {
-    const loader = new GLTFLoader();
-    loader.load(
-      data.file, 
-      (gltf) => {
-        const m = gltf.scene;
-        m.traverse(o => {
-          if (o.isMesh) {
-            o.castShadow = true; o.receiveShadow = true;
-            if (o.material && o.material.color) o.material.color = new THREE.Color(data.color);
-            if (o.material) { o.material.roughness = 0.6; o.material.metalness = 0.1; }
-          }
-        });
-        onMesh(m);
-      }, 
-      undefined, 
-      (err) => { 
-        console.error(`🚨 Failed to load GLB: ${data.file}`, err); 
-        s.loading = false; 
-        // Force plinth to show even if model fails
-        s.loaded = true; 
-        applyFilters();
-      }
-    );
-  } else {
-    const loader = new STLLoader();
-    loader.load(
-      data.file, 
-      (geom) => {
-        geom.computeVertexNormals();
-        const mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.55, metalness: 0.05 });
-        const mesh = new THREE.Mesh(geom, mat);
-        onMesh(mesh);
-      }, 
-      undefined, 
-      (err) => { 
-        console.error(`🚨 Failed to load STL: ${data.file}`, err); 
-        s.loading = false;
-        s.loaded = true; 
-        applyFilters();
-      }
-    );
-  }
+  });
 }
 
 // ---- 9. CAMERA: SMART ZOOM + DRAG PAN --------------------------------------
@@ -464,7 +465,7 @@ window.addEventListener('wheel', (e) => {
   raycaster.ray.intersectPlane(planeY, intersectionPoint);
   const before = intersectionPoint.clone();
 
-  const newZoom = Math.max(0.4, Math.min(cameraTarget.zoom - e.deltaY * 0.0012, 5.0));
+  const newZoom = Math.max(minZoom, Math.min(cameraTarget.zoom - e.deltaY * 0.0012, 5.0));
   cameraTarget.zoom = newZoom;
   camera.zoom = newZoom;
   camera.updateProjectionMatrix();
@@ -474,7 +475,6 @@ window.addEventListener('wheel', (e) => {
   cameraTarget.x += before.x - intersectionPoint.x;
   cameraTarget.z += before.z - intersectionPoint.z;
 
-  maybeLoadSculptures();
 }, { passive: false });
 
 // ---- Touch Pinch-to-Zoom ----
@@ -501,11 +501,10 @@ renderer.domElement.addEventListener('touchmove', (e) => {
     // Calculate how much the fingers have moved apart/together
     const scale = dist / initialPinchDistance;
 
-    camera.zoom = Math.max(0.4, Math.min(initialZoom * scale, 5.0));
+    camera.zoom = Math.max(minZoom, Math.min(initialZoom * scale, 5.0));
     cameraTarget.zoom = camera.zoom;
     camera.updateProjectionMatrix();
     
-    maybeLoadSculptures();
   }
 }, { passive: false });
 
@@ -551,7 +550,6 @@ window.addEventListener('pointermove', (e) => {
   camera.position.x = cameraTarget.x;
   camera.position.z = cameraTarget.z;
   lastPointer = { x: e.clientX, y: e.clientY };
-  maybeLoadSculptures();
 });
 
 // ---- 10. INTERACTION (click → info card; click again → modal) -------------
@@ -572,7 +570,7 @@ function openInfo(d) {
   statusEl.className = 'status-tag ' + (d.status || '').replace(' ', '-');
   statusEl.innerText = d.status;
   const hint = document.getElementById('info-hint');
-  hint.innerText = d.imagePath ? 'Click again — enlarge →' : 'Sculpture — 3D work';
+  hint.innerText = 'Click again — enlarge →';
   const enquireLink = document.getElementById('info-enquire-link');
   if (d.imagePath && d.canEnquire && d.enquiryPath) {
     enquireLink.href = d.enquiryPath;
@@ -594,7 +592,6 @@ function closeInfo() {
 let modalToken = 0;
 function largePath(p) { return p.replace(/^\/images\//, '/images/large/'); }
 function openModal(d) {
-  if (!d.imagePath) return; // sculptures don't have a 2D image
   const token = ++modalToken;
   modalImg.src = d.imagePath;
   document.getElementById('modal-title').innerText = d.title;
@@ -656,20 +653,9 @@ function applyFilters() {
     
     // Only make visible if it matches the filter AND has finished loading
     mesh.visible = matchesFilter && d.loaded;
-    if (matchesFilter && !d.isSculpture) visibleCount++; 
-  });
-
-  sculptureEntries.forEach(s => {
-    const d = s.data;
-    const matchesFilter = (activeFilters.medium === 'all' || d.medium === activeFilters.medium)
-                   && (activeFilters.category === 'all' || d.category === activeFilters.category)
-                   && (activeFilters.status === 'all' || d.status === activeFilters.status);
-    
-    // Removed the s.plinth visibility check
-    if (s.mesh) s.mesh.visible = matchesFilter && s.loaded;
     if (matchesFilter) visibleCount++;
   });
-  
+
   document.getElementById('count-visible').innerText = String(visibleCount).padStart(2, '0');
 }
 
@@ -707,7 +693,7 @@ document.querySelectorAll('#rail button').forEach(btn => {
 });
 
 // ---- 12. UI: loading screen, counts, clock, ticker ------------------------
-const totalCount = paintingsData.length + sculpturesData.length;
+const totalCount = paintingsData.length;
 document.getElementById('count-total').innerText = String(totalCount).padStart(2, '0');
 document.getElementById('count-visible').innerText = String(totalCount).padStart(2, '0');
 
@@ -768,7 +754,6 @@ window.addEventListener('resize', () => {
 
 // Load all paintings before revealing the gallery.
 loadAllPaintingTextures();
-maybeLoadSculptures();
 
 function animate() {
   requestAnimationFrame(animate);

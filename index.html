@@ -8,7 +8,6 @@
 <!-- PERF: preconnect to CDNs so DNS/TLS happens in parallel with HTML parsing -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
 <!-- Distinctive type pairing: Fraunces (expressive serif) + JetBrains Mono (metadata). -->
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -306,7 +305,6 @@
   </div>
   <div class="group">
     <div class="label">Category</div>
-    <button data-filter="category" data-value="portraits">Portraits</button>
     <button data-filter="category" data-value="body builder">Body Builder</button>
     <button data-filter="category" data-value="hands">Hands</button>
     <button data-filter="category" data-value="ai">AI</button>
@@ -361,10 +359,6 @@
   <span class="bar"></span> scroll to zoom <span class="bar"></span>
 </div>
 
-<!-- PERF: defer three.js + loaders so they don't block the LCP (masthead + loading text). -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js" defer></script>
 <script type="module" src="./script.js"></script>
 </body>
 </html>
