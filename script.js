@@ -11,7 +11,7 @@ const paintingsData = [
   {"fileName": "IMG_5309.webp", "title": "Untitled", "size": "80cm x 60cm x1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "landscape"},
   {"fileName": "IMG_5310.webp", "title": "When in doubt act like God", "size": "70cm x 100cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "portrait"},
   {"fileName": "IMG_5311.webp", "title": "I didn't know that was happening", "size": "80cm x 60cm x1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "landscape"},
-  {"fileName": "IMG_5312.webp", "title": "Love is an amazing feeling", "size": "100cm x 100cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "square"},
+  {"fileName": "IMG_5312.webp", "title": "Love is an amazing feeling", "size": "100cm x 100cm x 1.8cm", "medium": "canvas", "description": "oil on canvas", "category": "hands", "status": "available", "orientation": "square"},
   {"fileName": "IMG_5325.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "ai", "status": "available", "orientation": "portrait"},
   {"fileName": "IMG_5327.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "portrait"},
   {"fileName": "IMG_5328.webp", "title": "Untitled", "size": "A5", "medium": "paper", "description": "oil on paper", "category": "hands", "status": "available", "orientation": "landscape"},
@@ -279,6 +279,48 @@ function layoutPaintings(items) {
   return placed.flatMap(s => s.poly).map(([x, z]) => [x - cx, z - cz]);
 }
 
+// ---- 5b. CANVAS SHADOWS ----------------------------------------------------
+// Stretched canvases get a crisp, dark shadow on the floor so they read as solid
+// objects next to the flat paper works. PERF: one tiny texture drawn in code (no
+// download), one flat quad per canvas, attached to the canvas so it follows its
+// visibility.
+let canvasShadowTex = null;
+function makeCanvasShadowTexture() {
+  const S = 128, pad = 26;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const ctx = c.getContext('2d');
+  // Draw the box off-canvas and let only its blurred shadow land in view
+  // (works in every browser, unlike ctx.filter).
+  ctx.shadowColor = 'rgba(30, 22, 14, 1)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetX = S;
+  ctx.fillRect(pad - S, pad, S - 2 * pad, S - 2 * pad);
+  const t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding;
+  return { tex: t, margin: pad / (S - 2 * pad) }; // margin as a fraction of the box size
+}
+const CANVAS_SHADOW = { opacity: 0.32, offset: 0.28 }; // offset in floor units (10cm each)
+function addCanvasShadow(mesh, dims, rot) {
+  if (!canvasShadowTex) canvasShadowTex = makeCanvasShadowTexture();
+  const { tex, margin } = canvasShadowTex;
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex, transparent: true, opacity: CANVAS_SHADOW.opacity, depthWrite: false, fog: false
+  });
+  const quad = new THREE.Mesh(
+    new THREE.PlaneGeometry(dims.w * (1 + 2 * margin), dims.h * (1 + 2 * margin)), mat
+  );
+  quad.rotation.x = -Math.PI / 2;
+  // Cast away from the key light (which sits up and to the +x/+z side), then turn
+  // that world-space offset into the canvas's own rotated frame.
+  const L = keyLight.position, len = Math.hypot(L.x, L.z) || 1;
+  const wx = -L.x / len * CANVAS_SHADOW.offset, wz = -L.z / len * CANVAS_SHADOW.offset;
+  const c = Math.cos(-rot), s = Math.sin(-rot);
+  quad.position.set(wx * c + wz * s, -dims.thickness / 2 + 0.001, -wx * s + wz * c);
+  quad.renderOrder = -1;
+  quad.raycast = () => {}; // clicks and hovers go to the painting, not its shadow
+  mesh.add(quad);
+}
+
 // ---- 6. PAINTINGS (geometry immediately, textures streamed in) ------------
 // The edges remain Standard so they catch light and show physical depth
 const sharedEdgeMaterial = new THREE.MeshStandardMaterial({ color: 0xd2c7b5, roughness: 0.9 });
@@ -335,6 +377,8 @@ layoutItems.forEach(({ data, dims, x, z, rot }, idx) => {
   data.faceMat = faceMat;
   data.loaded = false;
   mesh.userData = data;
+
+  if (dims.thickness > 0.1) addCanvasShadow(mesh, dims, rot);
 
   mesh.visible = false;
   scene.add(mesh);
