@@ -279,48 +279,6 @@ function layoutPaintings(items) {
   return placed.flatMap(s => s.poly).map(([x, z]) => [x - cx, z - cz]);
 }
 
-// ---- 5b. CANVAS SHADOWS ----------------------------------------------------
-// Stretched canvases get a crisp, dark shadow on the floor so they read as solid
-// objects next to the flat paper works. PERF: one tiny texture drawn in code (no
-// download), one flat quad per canvas, attached to the canvas so it follows its
-// visibility.
-let canvasShadowTex = null;
-function makeCanvasShadowTexture() {
-  const S = 128, pad = 26;
-  const c = document.createElement('canvas'); c.width = c.height = S;
-  const ctx = c.getContext('2d');
-  // Draw the box off-canvas and let only its blurred shadow land in view
-  // (works in every browser, unlike ctx.filter).
-  ctx.shadowColor = 'rgba(30, 22, 14, 1)';
-  ctx.shadowBlur = 14;
-  ctx.shadowOffsetX = S;
-  ctx.fillRect(pad - S, pad, S - 2 * pad, S - 2 * pad);
-  const t = new THREE.CanvasTexture(c);
-  t.encoding = THREE.sRGBEncoding;
-  return { tex: t, margin: pad / (S - 2 * pad) }; // margin as a fraction of the box size
-}
-const CANVAS_SHADOW = { opacity: 0.32, offset: 0.28 }; // offset in floor units (10cm each)
-function addCanvasShadow(mesh, dims, rot) {
-  if (!canvasShadowTex) canvasShadowTex = makeCanvasShadowTexture();
-  const { tex, margin } = canvasShadowTex;
-  const mat = new THREE.MeshBasicMaterial({
-    map: tex, transparent: true, opacity: CANVAS_SHADOW.opacity, depthWrite: false, fog: false
-  });
-  const quad = new THREE.Mesh(
-    new THREE.PlaneGeometry(dims.w * (1 + 2 * margin), dims.h * (1 + 2 * margin)), mat
-  );
-  quad.rotation.x = -Math.PI / 2;
-  // Cast away from the key light (which sits up and to the +x/+z side), then turn
-  // that world-space offset into the canvas's own rotated frame.
-  const L = keyLight.position, len = Math.hypot(L.x, L.z) || 1;
-  const wx = -L.x / len * CANVAS_SHADOW.offset, wz = -L.z / len * CANVAS_SHADOW.offset;
-  const c = Math.cos(-rot), s = Math.sin(-rot);
-  quad.position.set(wx * c + wz * s, -dims.thickness / 2 + 0.001, -wx * s + wz * c);
-  quad.renderOrder = -1;
-  quad.raycast = () => {}; // clicks and hovers go to the painting, not its shadow
-  mesh.add(quad);
-}
-
 // ---- 6. PAINTINGS (geometry immediately, textures streamed in) ------------
 // The edges remain Standard so they catch light and show physical depth
 const sharedEdgeMaterial = new THREE.MeshStandardMaterial({ color: 0xd2c7b5, roughness: 0.9 });
@@ -376,9 +334,8 @@ layoutItems.forEach(({ data, dims, x, z, rot }, idx) => {
   data.index = idx + 1;
   data.faceMat = faceMat;
   data.loaded = false;
+  data.isHero = dims.thickness > 0.1; // stretched canvases: the big works in the middle
   mesh.userData = data;
-
-  if (dims.thickness > 0.1) addCanvasShadow(mesh, dims, rot);
 
   mesh.visible = false;
   scene.add(mesh);
@@ -438,12 +395,13 @@ function fitCameraToLayout() {
 fitCameraToLayout();
 
 // ---- 8. TEXTURE LOADER -----------------------------------------------------
-let paintingTexturesLoaded = 0;
 let loadingDismissed = false;
 
 function updateLoadingProgress() {
   if (!bar || !pct || !paintingMeshes.length) return;
-  const p = Math.round((paintingTexturesLoaded / paintingMeshes.length) * 100);
+  // Progress tracks the works the loading screen waits for (the big canvases).
+  const heroes = paintingMeshes.filter(m => m.userData.isHero);
+  const p = Math.round((heroes.filter(m => m.userData.loaded).length / (heroes.length || 1)) * 100);
   bar.style.width = p + '%';
   pct.innerText = String(p).padStart(3, '0') + '%';
 }
@@ -452,12 +410,13 @@ function finishPaintingTexture(mesh) {
   const d = mesh.userData;
   d.loaded = true;
   d.loading = false;
-  paintingTexturesLoaded++;
   updateLoadingProgress();
   applyFilters(); // each work appears as soon as its image arrives
 
-  if (paintingTexturesLoaded === paintingMeshes.length) {
-    setTimeout(dismissLoadingScreen, 150);
+  // PERF: lift the loading screen once the big canvases (the centre of the first
+  // view) are in; the smaller paper works keep appearing as they arrive.
+  if (paintingMeshes.every(m => m.userData.loaded || !m.userData.isHero)) {
+    dismissLoadingScreen();
   }
 }
 
@@ -749,12 +708,17 @@ const pct = document.getElementById('loading-pct');
 const screen = document.getElementById('loading-screen');
 
 function dismissLoadingScreen() {
+  if (loadingDismissed) return;
+  loadingDismissed = true;
   screen.style.opacity = '0';
   setTimeout(() => {
     screen.style.display = 'none';
     document.body.classList.remove('loading');
-  }, 700);
+  }, 350);
 }
+// Never keep visitors waiting on a slow connection: lift the screen after 3s
+// regardless, and let the remaining works appear as they arrive.
+setTimeout(dismissLoadingScreen, 3000);
 
 // Clock
 
