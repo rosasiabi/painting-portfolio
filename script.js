@@ -459,6 +459,7 @@ const planeY = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const intersectionPoint = new THREE.Vector3();
 
 window.addEventListener('wheel', (e) => {
+  if (e.target.closest && e.target.closest('#info-panel')) return; // let the info card scroll
   e.preventDefault();
   hideScrollHint();
 
@@ -573,7 +574,7 @@ function openInfo(d) {
   statusEl.className = 'status-tag ' + (d.status || '').replace(' ', '-');
   statusEl.innerText = d.status;
   const hint = document.getElementById('info-hint');
-  hint.innerText = 'Click again — enlarge →';
+  hint.innerText = (window.matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Click') + ' again — enlarge →';
   const enquireLink = document.getElementById('info-enquire-link');
   if (d.imagePath && d.canEnquire && d.enquiryPath) {
     enquireLink.href = d.enquiryPath;
@@ -640,6 +641,7 @@ window.addEventListener('pointermove', (e) => {
 });
 
 document.getElementById('close-modal').addEventListener('click', closeModal);
+document.getElementById('close-info').addEventListener('click', closeInfo);
 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeInfo(); } });
 

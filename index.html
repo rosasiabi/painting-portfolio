@@ -135,6 +135,7 @@
     transition: opacity .35s ease, transform .35s ease;
   }
   #info-panel.show{ display:block; opacity:1; transform:none; }
+  #close-info{ display:none; }
   #info-panel .kicker{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.28em; text-transform:uppercase; color: var(--muted); margin-bottom:10px; display:flex; justify-content:space-between; }
   #info-title{
     font-family:'Fraunces',serif; font-weight:300; font-style:italic;
@@ -245,7 +246,20 @@
     #info-panel{ 
       bottom: 20px; right: 20px; left: 20px; 
       max-width: none; min-width: 0; 
-      padding: 18px;
+      padding: 0 18px 18px;
+      /* Never taller than half the screen; scroll inside if the text is longer */
+      max-height: 50vh; max-height: 50dvh;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    /* Close button, centred at the top, stays visible while scrolling */
+    #close-info{
+      display:block; position: sticky; top: 0; z-index: 1;
+      margin: 0 -18px 8px; width: calc(100% + 36px);
+      padding: 12px 0 10px; background: var(--paper);
+      border:0; color: var(--ink-2); cursor:pointer;
+      font-family:'JetBrains Mono',monospace; font-size:10px;
+      letter-spacing:.32em; text-transform:uppercase; text-align:center;
     }
 
     /* Adjust the modal for smaller screens */
@@ -319,6 +333,7 @@
 
 <!-- Info card -->
 <div id="info-panel">
+  <button id="close-info" type="button" aria-label="Close">close</button>
   <div class="kicker"><span id="info-index">№ 00</span><span id="info-medium">—</span></div>
   <h2 id="info-title">—</h2>
   <div class="meta">
